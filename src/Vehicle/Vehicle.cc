@@ -218,6 +218,12 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _clockFactGroup(this)
     , _distanceSensorFactGroup(this)
     , _estimatorStatusFactGroup(this)
+    , _messageCountTimer(this)
+    , _messagesIn2sec(0)
+    , _prevMessagesReceived(0)
+    , _csvLogTimer(this)
+    , _sensorRange(30)
+    , _showTrajectory(false)
 {
     connect(_joystickManager, &JoystickManager::activeJoystickChanged, this, &Vehicle::_loadSettings);
     connect(qgcApp()->toolbox()->multiVehicleManager(), &MultiVehicleManager::activeVehicleAvailableChanged, this, &Vehicle::_loadSettings);
@@ -2399,6 +2405,121 @@ void Vehicle::setArmed(bool armed)
                    true,    // show error if fails
                    armed ? 1.0f : 0.0f);
 }
+
+//SwarmSense
+void Vehicle::setSensorRange(int sensorRange)
+{
+    _sensorRange = sensorRange;
+    emit sensorRangeChanged(sensorRange);
+}
+
+void Vehicle::setShowTrajectory(bool showTrajectory)
+{
+    _showTrajectory = showTrajectory;
+    emit showTrajectoryChanged(showTrajectory);
+}
+
+void Vehicle::setRtlOn(bool rtlOn)
+{
+    _rtlOn = rtlOn;
+    emit rtlOnChanged(_rtlOn);
+
+    qDebug() << "rtl is " << _rtlOn;
+}
+
+void Vehicle::setBioairOn(bool bioairOn)
+{
+    if(!_rtlOn){
+        sendMavCommand(_defaultComponentId,
+                    MAV_CMD_SET_BIOAIR,
+                    true,
+                    bioairOn ? 1.0f : 0.0f);
+    }
+
+    _bioairOn = bioairOn;
+    emit bioairOnChanged(_bioairOn);
+
+    qDebug() << "BioAiR On : " << _bioairOn;
+}
+
+void Vehicle::setStreamingOn(int streamingOn)
+{
+    if(!_rtlOn){
+        if(streamingOn == 0){ // both
+            _videoReceiver->start();
+
+            sendMavCommand(_defaultComponentId,
+                           MAV_CMD_SET_STREAMING,
+                           true,
+                           1.0f,
+                           _port, // PORT
+                           0.0f, // MODE - -1 : Nothing, 0 : both, 1 : rgb only, 2: depth only
+                           0.0f); // IS_USING_PELEENET
+        }else if(streamingOn == 1){ // rgb
+            _videoReceiver->start();
+
+            sendMavCommand(_defaultComponentId,
+                           MAV_CMD_SET_STREAMING,
+                           true,
+                           1.0f,
+                           _port, // PORT
+                           1.0f, // MODE
+                           0.0f); // IS_USING_PELEENET
+        }else if(streamingOn == 2){ // depth
+            _videoReceiver->start();
+
+            sendMavCommand(_defaultComponentId,
+                           MAV_CMD_SET_STREAMING,
+                           true,
+                           1.0f,
+                           _port, // PORT
+                           2.0f, // MODE
+                           0.0f); // IS_USING_PELEENET
+        } else if(streamingOn == -1){ // nothing
+            _videoReceiver->stop();
+            sendMavCommand(_defaultComponentId,
+                           MAV_CMD_SET_STREAMING,
+                           true,
+                           0.0f,
+                           0.0f, // PORT
+                           -1.0f, // MODE
+                           1.0f); // IS_USING_PELEENET
+        }
+    }else{ // for RTL
+        _videoReceiver->stop();
+    }
+
+    _streamingOn = streamingOn;
+
+    emit streamingOnChanged(_streamingOn);
+
+    qDebug() << "streaming On : " << _streamingOn;
+}
+
+void Vehicle::setAiOn(bool aiOn)
+{
+    if(!_rtlOn){
+        sendMavCommand(_defaultComponentId,
+                       MAV_CMD_SET_AI,
+                       true,
+                       aiOn ? 1.0f : 0.0f);
+    }
+
+    _aiOn = aiOn;
+    emit aiOnChanged(_aiOn);
+
+    qDebug() << "ai On : " << _aiOn;
+}
+
+void Vehicle::setMainIsMap(bool mainIsMap)
+{
+    _mainIsMap = mainIsMap;
+    emit mainIsMapChanged(_mainIsMap);
+
+//    qDebug() << "main is " << (_mainIsMap ? "Map" : "Video");
+
+}
+
 
 bool Vehicle::flightModeSetAvailable()
 {

@@ -43,6 +43,7 @@ Item {
             depthBtn.checked = activeVehicle.streamingOn === 0 || activeVehicle.streamingOn === 2
             bioairBtn.checked = activeVehicle.bioairOn
             aiBtn.checked = activeVehicle.aiOn
+            sensorRangeBtn.checked = activeVehicle.showTrajectory
         }
     }
 
@@ -203,13 +204,12 @@ Item {
             Layout.alignment:   Qt.AlignHCenter
             onClicked: {
                 console.log(checked)
-                console.log(activeVehicle.bioairOn)
+                console.log(activeVehicle.showTrajectory)
                 if(checked) {
-                    activeVehicle.setBioairOn(true)
+                    activeVehicle.setShowTrajectory(true)
                 } else {
-                    activeVehicle.setBioairOn(false)
+                    activeVehicle.setShowTrajectory(false)
                 }
-                console.log(activeVehicle.bioairOn)
             }
         }
         QGCSlider {
