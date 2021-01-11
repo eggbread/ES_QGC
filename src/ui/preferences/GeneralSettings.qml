@@ -1179,7 +1179,7 @@ Rectangle {
                     Item { width: 1; height: _margins }
 
                     QGCLabel {
-                        text:               qsTr("%1 Version").arg(QGroundControl.appName)
+                        text:               qsTr("%1 Version").arg("SWARMSENSE.AI"/*QGroundControl.appName*/)
                         Layout.alignment:   Qt.AlignHCenter
                     }
                     QGCLabel {
