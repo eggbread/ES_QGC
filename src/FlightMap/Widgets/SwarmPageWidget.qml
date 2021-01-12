@@ -57,6 +57,7 @@ Item {
         anchors.right:      parent.right
         columns:            2
         columnSpacing:      _margins
+        rows:               6
         rowSpacing:         ScreenTools.defaultFontPixelHeight
 
         QGCLabel {
@@ -225,6 +226,9 @@ Item {
             onValueChanged:         _activeVehicle.setSensorRange(value)
             updateValueWhileDragging: true
         }
+
+
+
         QGCLabel {
             text:               qsTr("Text Field");
             font.pointSize:     ScreenTools.smallFontPointSize
@@ -237,33 +241,39 @@ Item {
             visible:            QGroundControl.videoManager.isGStreamer
         }
 
-//        QGCLabel {
-//           text:                qsTr("Distance")
-//           font.pointSize:      ScreenTools.smallFontPointSize
-//           visible:             QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
-//        }
-//        QGCLabel {
-//           text:                qsTr("")
-//           font.pointSize:      ScreenTools.smallFontPointSize
-//           visible:             QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
-//        }
+        QGCLabel {
+           text:                qsTr("Distance")
+           font.pointSize:      ScreenTools.smallFontPointSize
+           visible:             QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
+        }
+        QGCLabel {
+           text:                qsTr("")
+           font.pointSize:      ScreenTools.smallFontPointSize
+           visible:             QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
+        }
 
-//        Repeater {
-//            model: QGroundControl.multiVehicleManager.vehicles
-//            Item {
+        Repeater {
+            model: QGroundControl.multiVehicleManager.vehicles
+
+            Column {
+                visible: _activeVehicle.id !== object.id
+                spacing: 5
+                QGCLabel {
+                    font.pointSize:      ScreenTools.smallFontPointSize
+                    width:  parent.width
+                    text:   "ID : " + object.id
+                }
+                QGCLabel {
+                   text:                _activeVehicle.coordinate.distanceTo(object.coordinate).toFixed(1) + " m"
+//                   font.pointSize:      ScreenTools.smallFontPointSize
+                   visible:             QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
+                }
 //                QGCLabel {
 //                    width:  parent.width
-//                    font.pointSize:     ScreenTools.smallFontPointSize
-//                    text:   "id"
+//                    text:   "m"
 //                }
-//                QGCLabel {
-//                    width:  parent.width
-//                    font.pointSize:     ScreenTools.smallFontPointSize
-//                    text:   "modelData.id"
-//                }
-//            }
-
-//        }
+            }
+        }
 
 //        QGCTextField {
 //            id:                 videoFileName
