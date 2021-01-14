@@ -45,6 +45,7 @@
 #include "VehicleObjectAvoidance.h"
 #include "TrajectoryPoints.h"
 #include "QGCGeo.h"
+#include "stdlib.h"
 
 #if defined(QGC_AIRMAP_ENABLED)
 #include "AirspaceVehicleManager.h"
@@ -219,6 +220,7 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _distanceSensorFactGroup(this)
     , _estimatorStatusFactGroup(this)
     , _messageCountTimer(this)
+    , _rssiTimer(this)
     , _messagesIn2sec(0)
     , _prevMessagesReceived(0)
     , _csvLogTimer(this)
@@ -255,6 +257,8 @@ Vehicle::Vehicle(LinkInterface*             link,
     _prearmErrorTimer.setInterval(_prearmErrorTimeoutMSecs);
     _prearmErrorTimer.setSingleShot(true);
 
+    _rssiTimer.setInterval(_rssiTimeoutMSecs);
+    connect(&_rssiTimer, &QTimer::timeout, this, &Vehicle::_updateRSSI);
     // Send MAV_CMD ack timer
     _mavCommandAckTimer.setSingleShot(true);
     _mavCommandAckTimer.setInterval(_highLatencyLink ? _mavCommandAckTimeoutMSecsHighLatency : _mavCommandAckTimeoutMSecs);
@@ -303,6 +307,9 @@ Vehicle::Vehicle(LinkInterface*             link,
     connect(&_csvLogTimer, &QTimer::timeout, this, &Vehicle::_writeCsvLine);
     _csvLogTimer.start(1000);
     _lastBatteryAnnouncement.start();
+
+    // SwarmSense
+    _rssiTimer.start();
 }
 
 // Disconnected Vehicle for offline editing
@@ -2415,6 +2422,10 @@ void Vehicle::setSensorRange(int sensorRange)
 
 void Vehicle::setShowTrajectory(bool showTrajectory)
 {
+//    char* comm = "ls -al";
+//    int result = system(comm);
+//    qWarning()<<result;
+//    _rssiTimer.start();
     _showTrajectory = showTrajectory;
     emit showTrajectoryChanged(showTrajectory);
 }
@@ -2440,6 +2451,11 @@ void Vehicle::setBioairOn(bool bioairOn)
     emit bioairOnChanged(_bioairOn);
 
     qDebug() << "BioAiR On : " << _bioairOn;
+}
+
+void Vehicle::setRssi(QVariantList rssi)
+{
+    _rssi = rssi;
 }
 
 void Vehicle::setStreamingOn(int streamingOn)
@@ -4079,6 +4095,32 @@ void Vehicle::_updateDistanceToGCS()
     } else {
         _distanceToGCSFact.setRawValue(qQNaN());
     }
+}
+
+void Vehicle::_updateRSSI()
+{
+//    qDebug()<<"Test"<<_id;
+//    QProcess* process = new QProcess();
+//    QStringList args;
+//    args << "| grep" << "inet";
+//    process->start("ifconfig", args);
+//    process->waitForFinished();
+//    QString tmp = process->readAll();
+//    qDebug()<<tmp;
+    double gcsRSSI = -40.0;
+
+    // send rssi command
+    double nodeRSSI = -30.0;
+    QVariantList test;
+    test.append(double(-(qrand() % 135 + 280))/10);
+    test.append(double(-(qrand() % 135 + 280))/10);
+    test.append(double(-(qrand() % 135 + 280))/10);
+    setRssi(test);
+    emit rssiChanged(test);
+//    qDebug()<<temp << _id;
+//    char* comm = "iw dev ";
+//    int result = system(comm);
+//    qWarning()<<result;
 }
 
 void Vehicle::_updateHobbsMeter()

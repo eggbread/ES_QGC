@@ -13,6 +13,7 @@ import QtQuick.Layouts          1.2
 import QtQuick.Controls         2.4
 import QtQuick.Dialogs          1.2
 import QtGraphicalEffects       1.0
+import QtLocation               5.3
 
 import QGroundControl                   1.0
 import QGroundControl.ScreenTools       1.0
@@ -265,15 +266,75 @@ Item {
                 }
                 QGCLabel {
                    text:                _activeVehicle.coordinate.distanceTo(object.coordinate).toFixed(1) + " m"
-//                   font.pointSize:      ScreenTools.smallFontPointSize
                    visible:             QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
                 }
+            }
+        }
+
+        QGCLabel {
+           text:                qsTr("RSSI")
+           font.pointSize:      ScreenTools.smallFontPointSize
+           visible:             QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
+        }
+        QGCLabel {
+           text:                qsTr("")
+           font.pointSize:      ScreenTools.smallFontPointSize
+           visible:             QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
+        }
+
+
+        Repeater {
+            model: _activeVehicle.rssi//QGroundControl.multiVehicleManager.vehicles.count
+
+
+            Column {
+                function getIcon(rssiValue){
+
+                    if(rssiValue >= -30){
+                        return "/qmlimages/resources/signal_quality_excellent.png"
+                    }
+                    else if(rssiValue < -30 && rssiValue >= -40){
+                        return "/qmlimages/resources/signal_quality_good.png"
+                    }
+                    else if(rssiValue < -40 && rssiValue >= -50){
+                        return "/qmlimages/resources/signal_quality_bad.png"
+                    }
+                    else {
+                        return "/qmlimages/resources/signal_quality_zero.png"
+                    }
+                }
+//                visible: _activeVehicle.id !== object.id
+                spacing: 5
 //                QGCLabel {
-//                    width:  parent.width
-//                    text:   "m"
+//                    font.pointSize:      ScreenTools.smallFontPointSize
+////                    width:  parent.width
+//                    text:   "ID : " + _activeVehicle.id
+//                }
+                Image {
+                    visible: QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
+                    height:     ScreenTools.defaultFontPixelWidth * 6
+                    width:      ScreenTools.defaultFontPixelWidth * 6
+                    fillMode:           Image.PreserveAspectFit
+                    source:             getIcon(modelData)
+
+                }
+
+//                QGCLabel {
+//                   text:                modelData + " dBm"
+//                   visible:             QGroundControl.videoManager.isGStreamer && QGroundControl.settingsManager.videoSettings.gridLines.visible
+
 //                }
             }
         }
+//        QGCListView {
+//            model: QGroundControl.multiVehicleManager.vehicles.count
+//            delegate: QGCLabel {
+//                font.pointSize:      ScreenTools.smallFontPointSize
+////                width:  parent.width
+//                text:   "ID : " + modelData
+//            }
+
+//        }
 
 //        QGCTextField {
 //            id:                 videoFileName

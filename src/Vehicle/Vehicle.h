@@ -637,14 +637,15 @@ public:
     Q_PROPERTY(CheckList            checkListState          READ checkListState         WRITE setCheckListState         NOTIFY checkListStateChanged)
 
     // SwarmSense
-//    Q_PROPERTY(int                  sensorRange             READ sensorRange            WRITE setSensorRange            NOTIFY sensorRangeChanged)
+    Q_PROPERTY(int                  sensorRange             READ sensorRange            WRITE setSensorRange            NOTIFY sensorRangeChanged)
     Q_PROPERTY(bool                 rtlOn                   READ rtlOn                  WRITE setRtlOn                  NOTIFY rtlOnChanged)
     Q_PROPERTY(bool                 bioairOn                READ bioairOn               WRITE setBioairOn               NOTIFY bioairOnChanged)
     Q_PROPERTY(int                  streamingOn             READ streamingOn            WRITE setStreamingOn            NOTIFY streamingOnChanged)
     Q_PROPERTY(bool                 aiOn                    READ aiOn                   WRITE setAiOn                   NOTIFY aiOnChanged)
     Q_PROPERTY(bool                 mainIsMap               READ mainIsMap              WRITE setMainIsMap              NOTIFY mainIsMapChanged)
     Q_PROPERTY(uint                 messagesIn2sec          READ messagesIn2sec                                         NOTIFY messagesIn2secChanged)
-    Q_PROPERTY(bool     showTrajectory          READ showTrajectory             WRITE setShowTrajectory     NOTIFY showTrajectoryChanged)
+    Q_PROPERTY(bool                 showTrajectory          READ showTrajectory             WRITE setShowTrajectory     NOTIFY showTrajectoryChanged)
+    Q_PROPERTY(QVariantList                rssi                    READ rssi             WRITE setRssi     NOTIFY rssiChanged)
 
     // The following properties relate to Orbit status
     Q_PROPERTY(bool             orbitActive     READ orbitActive        NOTIFY orbitActiveChanged)
@@ -872,6 +873,7 @@ public:
     bool aiOn      () { return _aiOn; }
     bool mainIsMap () { return _mainIsMap;}
     bool showTrajectory () { return _showTrajectory;}
+    QVariantList rssi     ()  { return _rssi;}
     VideoReceiver* videoReceiver(void) { return _videoReceiver; }
     uint            messagesIn2sec          () { return _messagesIn2sec; }
     /// SwarmSense
@@ -882,6 +884,7 @@ public:
     Q_INVOKABLE void setRtlOn (bool rtlOn);
     Q_INVOKABLE void setMainIsMap (bool mainIsMap);
     Q_INVOKABLE void setShowTrajectory(bool showTrajectory);
+    Q_INVOKABLE void setRssi    (QVariantList rssi);
 
     bool flightModeSetAvailable             ();
     QStringList flightModes                 ();
@@ -1238,6 +1241,7 @@ signals:
     void showTrajectoryChanged          (bool showTrajectory);
     void messagesIn2secChanged      ();
     void _handleMessageCountTimer();
+    void rssiChanged(QVariantList rssi);
     /// New RC channel values
     ///     @param channelCount Number of available channels, cMaxRcChannels max
     ///     @param pwmValues -1 signals channel not available
@@ -1303,6 +1307,7 @@ private slots:
     void _updateDistanceHeadingToHome   ();
     void _updateHeadingToNextWP         ();
     void _updateDistanceToGCS           ();
+    void _updateRSSI                    ();
     void _updateHobbsMeter              ();
     void _vehicleParamLoaded            (bool ready);
     void _sendQGCTimeToVehicle          ();
@@ -1480,6 +1485,8 @@ private:
     QTimer              _prearmErrorTimer;
     static const int    _prearmErrorTimeoutMSecs = 35 * 1000;   ///< Take away prearm error after 35 seconds
 
+    QTimer              _rssiTimer;
+    static const int    _rssiTimeoutMSecs = 2000;
     // Lost connection handling
     bool                _connectionLost;
     bool                _connectionLostEnabled;
@@ -1593,6 +1600,7 @@ private:
     bool    _bioairOn = false;
     bool    _showTrajectory = false;
     bool    _mainIsMap = true;
+    QVariantList _rssi;
     VideoReceiver*  _videoReceiver          = nullptr;
     int     _port = 0;
     QTimer              _messageCountTimer;
