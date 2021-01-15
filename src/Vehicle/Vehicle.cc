@@ -4115,6 +4115,7 @@ void Vehicle::_updateRSSI()
     test.append(double(-(qrand() % 135 + 280))/10);
     test.append(double(-(qrand() % 135 + 280))/10);
     test.append(double(-(qrand() % 135 + 280))/10);
+//    qCDebug(VehicleLog) << test;//Save the log
     setRssi(test);
     emit rssiChanged(test);
 //    qDebug()<<temp << _id;
