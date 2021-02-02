@@ -205,8 +205,6 @@ Item {
             visible:            activeVehicle
             Layout.alignment:   Qt.AlignHCenter
             onClicked: {
-                console.log(checked)
-                console.log(activeVehicle.showTrajectory)
                 if(checked) {
                     activeVehicle.setShowTrajectory(true)
                 } else {
@@ -218,7 +216,8 @@ Item {
             id:                     wizardPresetsAngleSlider
             visible:                sensorRangeBtn.checked
             minimumValue:           10
-            maximumValue:           100
+            maximumValue:           200
+            value:                  _activeVehicle.sensorRange
             stepSize:               10
             tickmarksEnabled:       false
             Layout.fillWidth:       true
