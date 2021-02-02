@@ -1593,7 +1593,7 @@ private:
     QMap<int, int>  _pidTuningMessageRatesUsecs;
 
     /// SwarmSense
-    int     _sensorRange = 30;
+    int     _sensorRange = 150;
     bool _rtlOn = false;
     bool    _aiOn = false;
     int    _streamingOn = -1;
