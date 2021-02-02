@@ -224,7 +224,7 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _messagesIn2sec(0)
     , _prevMessagesReceived(0)
     , _csvLogTimer(this)
-    , _sensorRange(30)
+    , _sensorRange(150)
     , _showTrajectory(false)
 {
     connect(_joystickManager, &JoystickManager::activeJoystickChanged, this, &Vehicle::_loadSettings);
@@ -1496,6 +1496,8 @@ void Vehicle::_handleCommandLong(mavlink_message_t& message)
             }
         }
         break;
+    case 40200:
+        qDebug() <<"Message"<< cmd.param1;
     }
 #endif
 }
@@ -4099,10 +4101,9 @@ void Vehicle::_updateDistanceToGCS()
 
 void Vehicle::_updateRSSI()
 {
-//    qDebug()<<"Test"<<_id;
 //    QProcess* process = new QProcess();
 //    QStringList args;
-//    args << "| grep" << "inet";
+//    args << "-c" << "iw dev wlx";
 //    process->start("ifconfig", args);
 //    process->waitForFinished();
 //    QString tmp = process->readAll();
