@@ -49,11 +49,10 @@ Item {
 
         MapPolyline {
             id: sensorTrajectory
-            line.width: 50
+            line.width: 10
             line.color: "#87ceeb"                           // Hack, can't get palette to work in here
-            z:          QGroundControl.zOrderWaypointLines
             path:       _vehicle.trajectoryPoints.list()
-            opacity:    0.5
+            opacity:    0.2
             visible:    _vehicle.showTrajectory
 
             Connections {
