@@ -100,9 +100,9 @@
     "shortDescription": "RTSP Video Timeout",
     "longDescription":  "How long to wait before assuming RTSP link is gone.",
     "type":             "uint32",
-    "min":              1,
+    "min":              20,
     "units":            "s",
-    "defaultValue":     2
+    "defaultValue":     20
 },
 {
     "name":             "streamEnabled",
@@ -115,13 +115,6 @@
     "name":             "disableWhenDisarmed",
     "shortDescription": "Video Stream Disnabled When Armed",
     "longDescription":  "Disable Video Stream when disarmed.",
-    "type":             "bool",
-    "defaultValue":     false
-},
-{
-    "name":             "lowLatencyMode",
-    "shortDescription": "Tweaks video for lower latency",
-    "longDescription":  "If this option is enabled, the rtpjitterbuffer is removed and the video sink is set to assynchronous mode, reducing the latency by about 200 ms.",
     "type":             "bool",
     "defaultValue":     false
 }

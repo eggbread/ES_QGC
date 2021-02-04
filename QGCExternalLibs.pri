@@ -1,17 +1,8 @@
-################################################################################
-#
-# (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
-#
-# QGroundControl is licensed according to the terms in the file
-# COPYING.md in the root of the source code directory.
-#
-################################################################################
-
 #
 # [REQUIRED] Add support for <inttypes.h> to Windows.
 #
 WindowsBuild {
-    INCLUDEPATH += libs/msinttypes
+    INCLUDEPATH += libs/lib/msinttypes
 }
 
 #
@@ -115,43 +106,63 @@ SOURCES += \
 #
 MacBuild {
     INCLUDEPATH += \
-        $$BASEDIR/libs/Frameworks/SDL2.framework/Headers
+        $$BASEDIR/libs/lib/Frameworks/SDL2.framework/Headers
+
     LIBS += \
-        -F$$BASEDIR/libs/Frameworks \
+        -F$$BASEDIR/libs/lib/Frameworks \
         -framework SDL2
 } else:LinuxBuild {
     PKGCONFIG = sdl2
 } else:WindowsBuild {
-    INCLUDEPATH += $$BASEDIR/libs/sdl2/msvc/include
-    INCLUDEPATH += $$BASEDIR/libs/OpenSSL/Windows/x64/include
-    LIBS += -L$$BASEDIR/libs/sdl2/msvc/lib/x64
-    LIBS += -lSDL2
+    INCLUDEPATH += $$BASEDIR/libs/lib/sdl2/msvc/include
+    INCLUDEPATH += $$BASEDIR/libs/zlib/Windows/include
+
+    contains(QT_ARCH, i386) {
+        INCLUDEPATH += $$BASEDIR/libs/OpenSSL/Windows/x86/include
+        LIBS += -L$$BASEDIR/libs/lib/sdl2/msvc/lib/x86
+        LIBS += -L$$BASEDIR/libs/OpenSSL/Windows/x86/lib
+    } else {
+        INCLUDEPATH += $$BASEDIR/libs/OpenSSL/Windows/x64/include
+        LIBS += -L$$BASEDIR/libs/lib/sdl2/msvc/lib/x64
+        LIBS += -L$$BASEDIR/libs/OpenSSL/Windows/x64/lib
+    }
+    LIBS += -L$$BASEDIR/libs/zlib/Windows/libs
+    LIBS += \
+        -lSDL2main \
+        -lSDL2 \
+		-lz \
+		-llibeay32
 }
 
-# Include Android OpenSSL libs
+# Include Android OpenSSL libs in order to make Qt OpenSSL support work
 AndroidBuild {
-    include($$BASEDIR/libs/OpenSSL/android_openssl/openssl.pri)
-    message("ANDROID_EXTRA_LIBS")
-    message($$ANDROID_TARGET_ARCH)
-    message($$ANDROID_EXTRA_LIBS)
+    equals(ANDROID_TARGET_ARCH, armeabi-v7a)  {
+        ANDROID_EXTRA_LIBS += $$BASEDIR/libs/OpenSSL/Android/arch-armeabi-v7a/lib/libcrypto.so
+        ANDROID_EXTRA_LIBS += $$BASEDIR/libs/OpenSSL/Android/arch-armeabi-v7a/lib/libssl.so
+    } else:equals(ANDROID_TARGET_ARCH, arm64-v8a)  {
+        # Haven't figured out how to get 64 bit arm OpenSLL yet. This means things like terrain queries will not qork.
+    } else:equals(ANDROID_TARGET_ARCH, x86)  {
+        ANDROID_EXTRA_LIBS += $$BASEDIR/libs/OpenSSL/Android/arch-x86/lib/libcrypto.so
+        ANDROID_EXTRA_LIBS += $$BASEDIR/libs/OpenSSL/Android/arch-x86/lib/libssl.so
+    } else {
+        error("Unsupported Android architecture: $${ANDROID_TARGET_ARCH}")
+    }
 }
 
 # Pairing
 contains(DEFINES, QGC_ENABLE_PAIRING) {
     MacBuild {
         #- Pairing is generally not supported on macOS. This is here solely for development.
-        exists(/usr/local/Cellar/openssl/1.0.2t/include) {
-            INCLUDEPATH += /usr/local/Cellar/openssl/1.0.2t/include
-            LIBS += -L/usr/local/Cellar/openssl/1.0.2t/lib
+        exists(/usr/local/Cellar/openssl/1.0.2s/include) {
+            INCLUDEPATH += /usr/local/Cellar/openssl/1.0.2s/include
+            LIBS += -L/usr/local/Cellar/openssl/1.0.2s/lib
             LIBS += -lcrypto -lz
         } else {
             # There is some circular reference settings going on between QGCExternalLibs.pri and gqgroundcontrol.pro.
             # So this duplicates some of the enable/disable logic which would normally be in qgroundcontrol.pro.
+            DEFINES -= QGC_ENABLE_NFC
             DEFINES -= QGC_ENABLE_PAIRING
         }
-    } else:WindowsBuild {
-        #- Pairing is not supported on Windows
-        DEFINES -= QGC_ENABLE_PAIRING
     } else {
         LIBS += -lcrypto -lz
         AndroidBuild {
@@ -182,6 +193,7 @@ contains (DEFINES, DISABLE_ZEROCONF) {
 } else {
     message("Skipping support for Zeroconf (unsupported platform)")
 }
+
 
 #
 # [OPTIONAL] AirMap Support

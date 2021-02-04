@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2018 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -52,13 +52,15 @@ public:
 
     /** @brief Get the unique system id */
     int getUASID() const;
+    /** @brief Get the components */
+    QMap<int, QString> getComponents();
 
     /** @brief The time interval the robot is switched on */
     quint64 getUptime() const;
 
-    /// Vehicle is about to go away
-    void shutdownVehicle(void);
-
+	/// Vehicle is about to go away
+	void shutdownVehicle(void);
+	
     // Setters for HIL noise variance
     void setXaccVar(float var){
         xacc_var = var;
@@ -116,9 +118,10 @@ public:
     friend class FileManager;
 #endif
 
-protected:
+protected: //COMMENTS FOR TEST UNIT
     /// LINK ID AND STATUS
     int uasId;                    ///< Unique system ID
+    QMap<int, QString> components;///< IDs and names of all detected onboard components
 
     QList<int> unknownPackets;    ///< Packet IDs which are unknown and have been received
     MAVLinkProtocol* mavlink;     ///< Reference to the MAVLink instance
@@ -137,6 +140,11 @@ protected:
     bool controlPitchManual;    ///< status flag, true if pitch is controlled manually
     bool controlYawManual;      ///< status flag, true if yaw is controlled manually
     bool controlThrustManual;   ///< status flag, true if thrust is controlled manually
+
+    double manualRollAngle;     ///< Roll angle set by human pilot (radians)
+    double manualPitchAngle;    ///< Pitch angle set by human pilot (radians)
+    double manualYawAngle;      ///< Yaw angle set by human pilot (radians)
+    double manualThrust;        ///< Thrust set by human pilot (radians)
 
     /// POSITION
     bool isGlobalPositionKnown; ///< If the global position has been received for this MAV

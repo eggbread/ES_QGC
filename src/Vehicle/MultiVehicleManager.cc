@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -95,13 +95,14 @@ void MultiVehicleManager::_vehicleHeartbeatInfo(LinkInterface* link, int vehicle
             return;
         }
     }
-
     if (_vehicles.count() > 0 && !qgcApp()->toolbox()->corePlugin()->options()->multiVehicleEnabled()) {
         return;
     }
+
     if (_ignoreVehicleIds.contains(vehicleId) || getVehicleById(vehicleId) || vehicleId == 0) {
         return;
     }
+
 
     switch (vehicleType) {
     case MAV_TYPE_GCS:
@@ -130,7 +131,7 @@ void MultiVehicleManager::_vehicleHeartbeatInfo(LinkInterface* link, int vehicle
     connect(vehicle, &Vehicle::allLinksInactive, this, &MultiVehicleManager::_deleteVehiclePhase1);
     connect(vehicle, &Vehicle::requestProtocolVersion, this, &MultiVehicleManager::_requestProtocolVersion);
     connect(vehicle->parameterManager(), &ParameterManager::parametersReadyChanged, this, &MultiVehicleManager::_vehicleParametersReadyChanged);
-
+    // port set
     _vehicles.append(vehicle);
 
     // Send QGC heartbeat ASAP, this allows PX4 to start accepting commands
@@ -139,9 +140,10 @@ void MultiVehicleManager::_vehicleHeartbeatInfo(LinkInterface* link, int vehicle
     qgcApp()->toolbox()->settingsManager()->appSettings()->defaultFirmwareType()->setRawValue(vehicleFirmwareType);
 
     emit vehicleAdded(vehicle);
+    qgcApp()->showMessage(tr("Connected to Vehicle %1").arg(vehicleId));
 
     if (_vehicles.count() > 1) {
-        qgcApp()->showMessage(tr("Connected to Vehicle %1").arg(vehicleId));
+//        qgcApp()->showMessage(tr("Connected to Vehicle %1").arg(vehicleId));
     } else {
         setActiveVehicle(vehicle);
     }
@@ -285,14 +287,6 @@ void MultiVehicleManager::_setActiveVehiclePhase2(void)
 {
     qCDebug(MultiVehicleManagerLog) << "_setActiveVehiclePhase2 _vehicleBeingSetActive" << _vehicleBeingSetActive;
 
-    //-- Keep track of current vehicle's coordinates
-    if(_activeVehicle) {
-        disconnect(_activeVehicle, &Vehicle::coordinateChanged, this, &MultiVehicleManager::_coordinateChanged);
-    }
-    if(_vehicleBeingSetActive) {
-        connect(_vehicleBeingSetActive, &Vehicle::coordinateChanged, this, &MultiVehicleManager::_coordinateChanged);
-    }
-
     // Now we signal the new active vehicle
     _activeVehicle = _vehicleBeingSetActive;
     emit activeVehicleChanged(_activeVehicle);
@@ -308,12 +302,6 @@ void MultiVehicleManager::_setActiveVehiclePhase2(void)
             emit parameterReadyVehicleAvailableChanged(true);
         }
     }
-}
-
-void MultiVehicleManager::_coordinateChanged(QGeoCoordinate coordinate)
-{
-    _lastKnownLocation = coordinate;
-    emit lastKnownLocationChanged();
 }
 
 void MultiVehicleManager::_vehicleParametersReadyChanged(bool parametersReady)

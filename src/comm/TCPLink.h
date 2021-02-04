@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2018 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -128,7 +128,7 @@ public:
     // LinkInterface methods
     virtual QString getName(void) const;
     virtual bool    isConnected(void) const;
-    virtual void    requestReset(void) {};
+    virtual void    requestReset(void) {}
 
     // Extensive statistics for scientific purposes
     qint64 getConnectionSpeed() const;

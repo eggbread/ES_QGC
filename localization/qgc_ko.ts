@@ -7952,7 +7952,7 @@ Click the Next button to upload calibration to board. Click Cancel if you don&ap
     <message>
       <location filename="../src/AnalyzeView/LogDownloadController.cc" line="360"/>
       <source>Downloaded</source>
-      <translation> 다운로드 완료</translation>
+      <translation> 다운로드 완료</translation>
     </message>
     <message>
       <location filename="../src/AnalyzeView/LogDownloadController.cc" line="426"/>
@@ -9170,7 +9170,7 @@ Is this really what you want?</source>
     <message>
       <location filename="../src/QtLocationPlugin/QMLControl/OfflineMap.qml" line="490"/>
       <source>Downloaded:</source>
-      <translation> 다운로드 완료:</translation>
+      <translation> 다운로드 완료:</translation>
     </message>
     <message>
       <location filename="../src/QtLocationPlugin/QMLControl/OfflineMap.qml" line="497"/>

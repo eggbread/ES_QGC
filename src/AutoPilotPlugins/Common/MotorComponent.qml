@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -20,10 +20,9 @@ SetupPage {
     id:             motorPage
     pageComponent:  pageComponent
 
-    readonly property int _barHeight:           10
-    readonly property int _barWidth:            5
-    readonly property int _sliderHeight:        10
-    readonly property int _motorTimeoutSecs:    3
+    readonly property int _barHeight:       10
+    readonly property int _barWidth:        5
+    readonly property int _sliderHeight:    10
 
     FactPanelController {
         id:             controller
@@ -33,13 +32,7 @@ SetupPage {
         id: pageComponent
 
         Column {
-            spacing: ScreenTools.defaultFontPixelHeight
-
-            QGCLabel {
-                text:       qsTr("Warning: Unable to determine motor count")
-                color:      qgcPal.warningText
-                visible:    controller.vehicle.motorCount == -1
-            }
+            spacing: 10
 
             Row {
                 id:         motorSliders
@@ -53,6 +46,20 @@ SetupPage {
                     Column {
                         property alias motorSlider: slider
 
+                        Timer {
+                            interval:       250
+                            running:        true
+                            repeat:         true
+
+                            property real _lastValue: 0
+
+                            onTriggered: {
+                                if (_lastValue !== slider.value) {
+                                    controller.vehicle.motorTest(index + 1, slider.value, 1)
+                                }
+                            }
+                        }
+
                         QGCLabel {
                             anchors.horizontalCenter:   parent.horizontalCenter
                             text:                       index + 1
@@ -62,30 +69,8 @@ SetupPage {
                             id:                         slider
                             height:                     ScreenTools.defaultFontPixelHeight * _sliderHeight
                             orientation:                Qt.Vertical
-                            minimumValue:               0
                             maximumValue:               100
-                            stepSize:                   1
                             value:                      0
-                            updateValueWhileDragging:   false
-
-                            onValueChanged: {
-                                controller.vehicle.motorTest(index + 1, value, value == 0 ? 0 : _motorTimeoutSecs)
-                                if (value != 0) {
-                                    motorTimer.restart()
-                                }
-                            }
-
-                            Timer {
-                                id:             motorTimer
-                                interval:       _motorTimeoutSecs * 1000
-                                repeat:         false
-                                running:        false
-
-                                onTriggered: {
-                                    allSlider.value = 0
-                                    slider.value = 0
-                                }
-                            }
                         }
                     } // Column
                 } // Repeater
@@ -100,11 +85,8 @@ SetupPage {
                         id:                         allSlider
                         height:                     ScreenTools.defaultFontPixelHeight * _sliderHeight
                         orientation:                Qt.Vertical
-                        minimumValue:               0
                         maximumValue:               100
-                        stepSize:                   1
                         value:                      0
-                        updateValueWhileDragging:   false
 
                         onValueChanged: {
                             for (var sliderIndex=0; sliderIndex<sliderRepeater.count; sliderIndex++) {
@@ -113,6 +95,16 @@ SetupPage {
                         }
                     }
                 } // Column
+
+                MultiRotorMotorDisplay {
+                    anchors.top:    parent.top
+                    anchors.bottom: parent.bottom
+                    width:          height
+                    motorCount:     controller.vehicle.motorCount
+                    xConfig:        controller.vehicle.xConfigMotors
+                    coaxial:        controller.vehicle.coaxialMotors
+                }
+
             } // Row
 
             QGCLabel {
@@ -139,7 +131,7 @@ SetupPage {
 
                 QGCLabel {
                     color:  qgcPal.warningText
-                    text:   safetySwitch.checked ? qsTr("Careful: Motor sliders are enabled") : qsTr("Propellers are removed - Enable motor sliders")
+                    text:   qsTr("Propellers are removed - Enable motor sliders")
                 }
             } // Row
         } // Column

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -189,6 +189,8 @@ QString PX4FirmwarePlugin::flightMode(uint8_t base_mode, uint32_t custom_mode) c
             qWarning() << "Unknown flight mode" << custom_mode;
             return tr("Unknown %1:%2").arg(base_mode).arg(custom_mode);
         }
+    } else {
+        qWarning() << "PX4 Flight Stack flight mode without custom mode enabled?";
     }
 
     return flightMode;
@@ -226,13 +228,10 @@ bool PX4FirmwarePlugin::setFlightMode(const QString& flightMode, uint8_t* base_m
 bool PX4FirmwarePlugin::isCapable(const Vehicle *vehicle, FirmwareCapabilities capabilities)
 {
     int available = SetFlightModeCapability | PauseVehicleCapability | GuidedModeCapability;
-    //-- This is arbitrary until I find how to really tell if ROI is avaiable
-    if (vehicle->multiRotor()) {
-        available |= ROIModeCapability;
-    }
     if (vehicle->multiRotor() || vehicle->vtol()) {
         available |= TakeoffVehicleCapability | OrbitModeCapability;
     }
+
     return (capabilities & available) == capabilities;
 }
 
@@ -474,13 +473,14 @@ void PX4FirmwarePlugin::guidedModeChangeAltitude(Vehicle* vehicle, double altitu
 
 void PX4FirmwarePlugin::startMission(Vehicle* vehicle)
 {
+
     if (_setFlightModeAndValidate(vehicle, missionFlightMode())) {
         if (!_armVehicleAndValidate(vehicle)) {
             qgcApp()->showMessage(tr("Unable to start mission: Vehicle rejected arming."));
             return;
         }
     } else {
-        qgcApp()->showMessage(tr("Unable to start mission: Vehicle not changing to %1 flight mode.").arg(missionFlightMode()));
+        qgcApp()->showMessage(tr("Unable to start mission: Vehicle not ready."));
     }
 }
 

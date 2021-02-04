@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -51,13 +51,14 @@ Item {
 
     QGCFlickable {
         anchors.fill:   parent
-        contentWidth:   Math.max(availableWidth, pageLoader.x + pageLoader.item.width)
-        contentHeight:  Math.max(availableHeight, pageLoader.y + pageLoader.item.height)
+        contentWidth:   pageLoader.x + pageLoader.item.width
+        contentHeight:  pageLoader.y + pageLoader.item.height
         clip:           true
 
         RowLayout {
             id:                 headingRow
-            width:              availableWidth
+            anchors.left:       parent.left
+            anchors.right:      parent.right
             spacing:            _margins
             layoutDirection:    Qt.RightToLeft
 
@@ -67,22 +68,22 @@ Item {
                 visible:    showAdvanced
             }
 
-            ColumnLayout {
+            Column {
                 spacing:            _margins
                 Layout.fillWidth:   true
 
                 QGCLabel {
-                    Layout.fillWidth:   true
-                    font.pointSize:     ScreenTools.largeFontPointSize
-                    text:               !setupView.enabled ? _pageTitle + "<font color=\"red\">" + qsTr(" (Disabled while the vehicle is %1)").arg(_disableReason) + "</font>" : _pageTitle
-                    visible:            !ScreenTools.isShortScreen
+                    font.pointSize: ScreenTools.largeFontPointSize
+                    text:           !setupView.enabled ? _pageTitle + "<font color=\"red\">" + qsTr(" (Disabled while the vehicle is %1)").arg(_disableReason) + "</font>" : _pageTitle
+                    visible:        !ScreenTools.isShortScreen
                 }
 
                 QGCLabel {
-                    Layout.fillWidth:   true
-                    wrapMode:           Text.WordWrap
-                    text:               pageDescription
-                    visible:            pageDescription !== "" && !ScreenTools.isShortScreen
+                    anchors.left:   parent.left
+                    anchors.right:  parent.right
+                    wrapMode:       Text.WordWrap
+                    text:           pageDescription
+                    visible:        pageDescription !== "" && !ScreenTools.isShortScreen
                 }
             }
         }
@@ -95,7 +96,7 @@ Item {
         // to be disabled
         Rectangle {
             visible:            !setupView.enabled
-            anchors.fill:       parent
+            anchors.fill:       pageLoader
             color:              "black"
             opacity:            0.5
         }

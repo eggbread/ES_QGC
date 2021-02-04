@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -69,7 +69,6 @@ StructureScanComplexItem::StructureScanComplexItem(Vehicle* vehicle, bool flyVie
 
     connect(&_structurePolygon, &QGCMapPolygon::dirtyChanged,   this, &StructureScanComplexItem::_polygonDirtyChanged);
     connect(&_structurePolygon, &QGCMapPolygon::pathChanged,    this, &StructureScanComplexItem::_rebuildFlightPolygon);
-    connect(&_structurePolygon, &QGCMapPolygon::isValidChanged, this, &StructureScanComplexItem::readyForSaveStateChanged);
 
     connect(&_structurePolygon, &QGCMapPolygon::countChanged,   this, &StructureScanComplexItem::_updateLastSequenceNumber);
     connect(&_layersFact,       &Fact::valueChanged,            this, &StructureScanComplexItem::_updateLastSequenceNumber);
@@ -86,8 +85,6 @@ StructureScanComplexItem::StructureScanComplexItem(Vehicle* vehicle, bool flyVie
 
     connect(&_layersFact,                           &Fact::valueChanged,            this, &StructureScanComplexItem::_recalcScanDistance);
     connect(&_flightPolygon,                        &QGCMapPolygon::pathChanged,    this, &StructureScanComplexItem::_recalcScanDistance);
-
-    connect(this, &StructureScanComplexItem::wizardModeChanged, this, &StructureScanComplexItem::readyForSaveStateChanged);
 
     _recalcLayerInfo();
 
@@ -216,7 +213,7 @@ bool StructureScanComplexItem::load(const QJsonObject& complexObject, int sequen
     setSequenceNumber(sequenceNumber);
 
     // Load CameraCalc first since it will trigger camera name change which will trounce gimbal angles
-    if (!_cameraCalc.load(complexObject[_jsonCameraCalcKey].toObject(), errorString)) {
+    if (!_cameraCalc.load(complexObject[_jsonCameraCalcKey].toObject(), false /* forPresets */, false /* cameraSpecInPreset */, errorString)) {
         return false;
     }
 
@@ -264,11 +261,6 @@ void StructureScanComplexItem::_flightPathChanged(void)
     emit coordinateChanged(coordinate());
     emit exitCoordinateChanged(exitCoordinate());
     emit greatestDistanceToChanged();
-
-    if (_isIncomplete) {
-        _isIncomplete = false;
-        emit isIncompleteChanged();
-    }
 }
 
 double StructureScanComplexItem::greatestDistanceTo(const QGeoCoordinate &other) const
@@ -285,6 +277,11 @@ double StructureScanComplexItem::greatestDistanceTo(const QGeoCoordinate &other)
     }
 
     return greatestDistance;
+}
+
+bool StructureScanComplexItem::specifiesCoordinate(void) const
+{
+    return _flightPolygon.count() > 2;
 }
 
 void StructureScanComplexItem::appendMissionItems(QList<MissionItem*>& items, QObject* missionItemParent)
@@ -619,9 +616,4 @@ void StructureScanComplexItem::_recalcScanDistance()
     qCDebug(StructureScanComplexItemLog) << "StructureScanComplexItem--_recalcScanDistance layers: "
                                   << _layersFact.rawValue().toInt() << " structure height: " << surfaceHeight
                                   << " scanDistance: " << _scanDistance;
-}
-
-StructureScanComplexItem::ReadyForSaveState StructureScanComplexItem::readyForSaveState(void) const
-{
-    return _structurePolygon.isValid() && !_wizardMode ? ReadyForSave : NotReadyForSaveData;
 }

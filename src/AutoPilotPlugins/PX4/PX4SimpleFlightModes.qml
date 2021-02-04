@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -81,49 +81,52 @@ Item {
                         height:             flightModeColumn.height + ScreenTools.defaultFontPixelHeight
                         color:              qgcPal.windowShade
 
-                        GridLayout {
+                        ColumnLayout {
                             id:                 flightModeColumn
                             anchors.margins:    ScreenTools.defaultFontPixelWidth
                             anchors.left:       parent.left
                             anchors.top:        parent.top
-                            rows:               7
-                            rowSpacing:         ScreenTools.defaultFontPixelWidth / 2
-                            columnSpacing:      rowSpacing
-                            flow:               GridLayout.TopToBottom
+                            spacing:            ScreenTools.defaultFontPixelHeight
 
-                            QGCLabel {
+                            RowLayout {
                                 Layout.fillWidth:   true
-                                text:               qsTr("Mode Channel")
-                            }
-
-                            Repeater {
-                                model:  6
+                                spacing:            _margins
 
                                 QGCLabel {
                                     Layout.fillWidth:   true
-                                    text:               qsTr("Flight Mode %1").arg(modelData + 1)
-                                    color:              (controller.activeFlightMode - 1) == index ? "yellow" : qgcPal.text
+                                    text:               qsTr("Mode channel:")
                                 }
-                            }
 
-                            FactComboBox {
-                                Layout.fillWidth:   true
-                                fact:               controller.getParameterFact(-1, "RC_MAP_FLTMODE")
-                                indexModel:         false
-                                sizeToContents:     true
+                                FactComboBox {
+                                    Layout.preferredWidth:  _channelComboWidth
+                                    fact:                   controller.getParameterFact(-1, "RC_MAP_FLTMODE")
+                                    indexModel:             false
+                                }
                             }
 
                             Repeater {
                                 model:  6
 
-                                FactComboBox {
+                                RowLayout {
                                     Layout.fillWidth:   true
-                                    fact:               controller.getParameterFact(-1, "COM_FLTMODE" + (modelData + 1))
-                                    indexModel:         false
-                                    sizeToContents:     true
+                                    spacing:            ScreenTools.defaultFontPixelWidth
+
+                                    property int index:         modelData + 1
+
+                                    QGCLabel {
+                                        Layout.fillWidth:   true
+                                        text:               qsTr("Flight Mode %1").arg(index)
+                                        color:              controller.activeFlightMode == index ? "yellow" : qgcPal.text
+                                    }
+
+                                    FactComboBox {
+                                        Layout.preferredWidth:  _channelComboWidth
+                                        fact:                   controller.getParameterFact(-1, "COM_FLTMODE" + index)
+                                        indexModel:             false
+                                    }
                                 }
-                            }
-                        }
+                            } // Repeater - Flight Modes
+                        } // Column - Flight Modes
                     } // Rectangle - Flight Modes
                 } // Column - Flight mode settings
 

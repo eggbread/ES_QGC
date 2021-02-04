@@ -1,18 +1,27 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
  *
  ****************************************************************************/
 
-#pragma once
+
+/**
+ * @file
+ *   @brief Definition of main class
+ *
+ *   @author Lorenz Meier <mavteam@student.ethz.ch>
+ *
+ */
+
+#ifndef QGCAPPLICATION_H
+#define QGCAPPLICATION_H
 
 #include <QApplication>
 #include <QTimer>
 #include <QQmlApplicationEngine>
-#include <QElapsedTimer>
 
 #include "LinkConfiguration.h"
 #include "LinkManager.h"
@@ -41,15 +50,11 @@ class QGCFileDownload;
  * This class is started by the main method and provides
  * the central management unit of the groundstation application.
  *
- * Needs QApplication base to support QtCharts module. This way
- * we avoid application crashing on 5.12 when using the module.
- *
- * Note: `lastWindowClosed` will be sent by MessageBox popups and other
- * dialogs, that are spawned in QML, when they are closed
-**/
-class QGCApplication : public QApplication
+ **/
+class QGCApplication : public QGuiApplication
 {
     Q_OBJECT
+
 public:
     QGCApplication(int &argc, char* argv[], bool unitTesting);
     ~QGCApplication();
@@ -92,8 +97,6 @@ public:
 
     void            setLanguage();
     QQuickItem*     mainRootWindow();
-
-    uint64_t        msecsSinceBoot(void) { return _msecsElapsedTime.elapsed(); }
 
 public slots:
     /// You can connect to this slot to show an information message box from a different thread.
@@ -168,10 +171,10 @@ private:
     void        _exitWithError          (QString errorMessage);
 
 
-    bool                        _runningUnitTests;                                  ///< true: running unit tests, false: normal app
-    static const int            _missingParamsDelayedDisplayTimerTimeout = 1000;    ///< Timeout to wait for next missing fact to come in before display
-    QTimer                      _missingParamsDelayedDisplayTimer;                  ///< Timer use to delay missing fact display
-    QList<QPair<int,QString>>   _missingParams;                                     ///< List of missing parameter component id:name
+    bool                _runningUnitTests;                                  ///< true: running unit tests, false: normal app
+    static const int    _missingParamsDelayedDisplayTimerTimeout = 1000;    ///< Timeout to wait for next missing fact to come in before display
+    QTimer              _missingParamsDelayedDisplayTimer;                  ///< Timer use to delay missing fact display
+    QStringList         _missingParams;                                     ///< List of missing facts to be displayed
 
     QQmlApplicationEngine* _qmlAppEngine        = nullptr;
     bool                _logOutput              = false;                    ///< true: Log Qt debug output to file
@@ -189,7 +192,6 @@ private:
     QTranslator         _QGCTranslatorQt;
     QLocale             _locale;
     bool                _error                  = false;
-    QElapsedTimer       _msecsElapsedTime;
 
     static const char* _settingsVersionKey;             ///< Settings key which hold settings version
     static const char* _deleteAllSettingsKey;           ///< If this settings key is set on boot, all settings will be deleted
@@ -201,3 +203,5 @@ private:
 
 /// @brief Returns the QGCApplication object singleton.
 QGCApplication* qgcApp(void);
+
+#endif

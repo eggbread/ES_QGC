@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -141,9 +141,6 @@ QString AudioOutput::fixTextMessageForAudio(const QString& string) {
     }
     if(result.contains("PREARM", Qt::CaseInsensitive)) {
         result.replace("PREARM", "pre arm", Qt::CaseInsensitive);
-    }
-    if(result.contains("PITOT", Qt::CaseInsensitive)) {
-        result.replace("PITOT", "pee toe", Qt::CaseInsensitive);
     }
 
     // Convert negative numbers

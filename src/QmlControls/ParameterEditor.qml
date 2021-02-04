@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -32,8 +32,10 @@ Item {
     property var    _appSettings:       QGroundControl.settingsManager.appSettings
 
     ParameterEditorController {
-        id:                 controller
-        onShowErrorMessage: mainWindow.showMessageDialog(qsTr("Parameter Load Errors"), errorMsg)
+        id:         controller;
+        onShowErrorMessage: {
+            mainWindow.showMessageDialog(qsTr("Parameter Editor"), qsTr("Parameter Load Errors"))
+        }
     }
 
     ExclusiveGroup { id: sectionGroup }
@@ -107,6 +109,7 @@ Item {
         }
         QGCMenuItem {
             text:           qsTr("Reset all to firmware's defaults")
+            visible:        !activeVehicle.apmFirmware
             onTriggered:    mainWindow.showComponentDialog(resetToDefaultConfirmComponent, qsTr("Reset All"), mainWindow.showDialogDefaultWidth, StandardButton.Cancel | StandardButton.Reset)
         }
         QGCMenuItem {
@@ -173,8 +176,6 @@ Item {
 
                     SectionHeader {
                         id:             categoryHeader
-                        anchors.left:   parent.left
-                        anchors.right:  parent.right
                         text:           category
                         checked:        controller.currentCategory === text
                         exclusiveGroup: sectionGroup
@@ -202,8 +203,8 @@ Item {
                             readonly property string groupName: modelData
 
                             onClicked: {
-                                if (!checked) _rowWidth = 10
                                 checked = true
+                                _rowWidth                   = 10
                                 controller.currentCategory  = category
                                 controller.currentGroup     = groupName
                             }

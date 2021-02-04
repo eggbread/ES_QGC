@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2018 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -34,7 +34,8 @@ Q_DECLARE_LOGGING_CATEGORY(MAVLinkProtocolLog)
  * @brief MAVLink micro air vehicle protocol reference implementation.
  *
  * MAVLink is a generic communication protocol for micro air vehicles.
- * for more information, please see the official website: https://mavlink.io
+ * for more information, please see the official website.
+ * @ref http://pixhawk.ethz.ch/software/mavlink/
  **/
 class MAVLinkProtocol : public QGCTool
 {
@@ -80,9 +81,6 @@ public:
 public slots:
     /** @brief Receive bytes from a communication interface */
     void receiveBytes(LinkInterface* link, QByteArray b);
-
-    /** @brief Log bytes sent from a communication interface */
-    void logSentBytes(LinkInterface* link, QByteArray b);
     
     /** @brief Set the system id of this application */
     void setSystemId(int id);

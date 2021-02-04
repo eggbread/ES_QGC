@@ -1,11 +1,11 @@
-################################################################################
-#
-# (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
-#
-# QGroundControl is licensed according to the terms in the file
-# COPYING.md in the root of the source code directory.
-#
-################################################################################
+# -------------------------------------------------
+# QGroundControl - Micro Air Vehicle Groundstation
+# Please see our website at <http://qgroundcontrol.org>
+# Maintainer:
+# Lorenz Meier <lm@inf.ethz.ch>
+# (c) 2009-2014 QGroundControl Developers
+# License terms set in COPYING.md
+# -------------------------------------------------
 
 installer {
     DEFINES += QGC_INSTALL_RELEASE
@@ -27,7 +27,11 @@ installer {
         # We cd to release directory so we can run macdeployqt without a path to the
         # qgroundcontrol.app file. If you specify a path to the .app file the symbolic
         # links to plugins will not be created correctly.
-        QMAKE_POST_LINK += && cd $${DESTDIR} && $$dirname(QMAKE_QMAKE)/macdeployqt $${TARGET}.app -appstore-compliant -verbose=1 -qmldir=$${BASEDIR}/src
+        QMAKE_POST_LINK += && cd $${DESTDIR} && $$dirname(QMAKE_QMAKE)/macdeployqt $${TARGET}.app -appstore-compliant -verbose=2 -qmldir=$${BASEDIR}/src
+
+        # macdeployqt does not deploy texttospeech plugin
+        QMAKE_POST_LINK += && mkdir $${TARGET}.app/Contents/PlugIns/texttospeech
+        QMAKE_POST_LINK += && cp $$[QT_INSTALL_PLUGINS]/texttospeech/libqtexttospeech_speechosx.dylib $${TARGET}.app/Contents/PlugIns/texttospeech
 
         # macdeployqt is missing some relocations once in a while. "Fix" it:
         QMAKE_POST_LINK += && python $$BASEDIR/tools/osxrelocator.py $${TARGET}.app/Contents @rpath @executable_path/../Frameworks -r > /dev/null 2>&1
@@ -45,7 +49,7 @@ installer {
     LinuxBuild {
         #-- TODO: This uses hardcoded paths. It should use $${DESTDIR}
         QMAKE_POST_LINK += && mkdir -p release/package
-        QMAKE_POST_LINK += && tar -cj --exclude='package' -f release/package/QGroundControl.tar.bz2 release --transform 's/release/qgroundcontrol/'
+        QMAKE_POST_LINK += && tar --warning=no-file-changed -cjf release/package/QGroundControl.tar.bz2 release --exclude='package' --transform 's/release/qgroundcontrol/'
     }
     AndroidBuild {
         QMAKE_POST_LINK += && mkdir -p $${DESTDIR}/package

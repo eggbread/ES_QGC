@@ -40,7 +40,7 @@
 ** 2015.4.4
 ** Adapted for use with QGroundControl
 **
-** Gus Grubba <gus@auterion.com>
+** Gus Grubba <mavlink@grubba.com>
 **
 ****************************************************************************/
 

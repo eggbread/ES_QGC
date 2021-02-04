@@ -1,22 +1,17 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
  *
  ****************************************************************************/
-
-/// @file
-/// @brief Application Settings
-
 #pragma once
 #include <QTranslator>
 
 #include "SettingsGroup.h"
 #include "QGCMAVLink.h"
 
-/// Application Settings
 class AppSettings : public SettingsGroup
 {
     Q_OBJECT
@@ -39,14 +34,13 @@ public:
     DEFINE_SETTINGFACT(audioMuted)
     DEFINE_SETTINGFACT(checkInternet)
     DEFINE_SETTINGFACT(virtualJoystick)
-    DEFINE_SETTINGFACT(virtualJoystickAutoCenterThrottle)
+    DEFINE_SETTINGFACT(virtualJoystickCentralized)
     DEFINE_SETTINGFACT(appFontPointSize)
     DEFINE_SETTINGFACT(indoorPalette)
     DEFINE_SETTINGFACT(showLargeCompass)
     DEFINE_SETTINGFACT(savePath)
     DEFINE_SETTINGFACT(autoLoadMissions)
     DEFINE_SETTINGFACT(useChecklist)
-    DEFINE_SETTINGFACT(enforceChecklist)
     DEFINE_SETTINGFACT(mapboxToken)
     DEFINE_SETTINGFACT(esriToken)
     DEFINE_SETTINGFACT(defaultFirmwareType)

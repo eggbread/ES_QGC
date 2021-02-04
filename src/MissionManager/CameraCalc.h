@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -70,7 +70,7 @@ public:
     void setDistanceToSurfaceRelative   (bool distanceToSurfaceRelative);
 
     void save(QJsonObject& json) const;
-    bool load(const QJsonObject& json, QString& errorString);
+    bool load(const QJsonObject& json, bool forPresets, bool cameraSpecInPreset, QString& errorString);
 
     static const char* cameraNameName;
     static const char* valueSetIsDistanceName;

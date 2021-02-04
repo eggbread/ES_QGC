@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2018 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -20,6 +20,7 @@
 #include <QPointer>
 
 #include "LinkInterface.h"
+#include "ProtocolInterface.h"
 
 #ifndef __mobile__
 class FileManager;
@@ -46,6 +47,8 @@ public:
 #ifndef __mobile__
     virtual FileManager* getFileManager() = 0;
 #endif
+
+    virtual QMap<int, QString> getComponents() = 0;
 
     enum StartCalibrationType {
         StartCalibrationRadio,
@@ -107,6 +110,21 @@ public slots:
     virtual void unsetRCToParameterMap() = 0;
 
 signals:
+    /**
+     * @brief Update the error count of a device
+     *
+     * The error count indicates how many errors occurred during the use of a device.
+     * Usually a random error from time to time is acceptable, e.g. through electromagnetic
+     * interferences on device lines like I2C and SPI. A constantly and rapidly increasing
+     * error count however can help to identify broken cables or misbehaving drivers.
+     *
+     * @param uasid System ID
+     * @param component Name of the component, e.g. "IMU"
+     * @param device Name of the device, e.g. "SPI0" or "I2C1"
+     * @param count Errors occurred since system startup
+     */
+    void errCountChanged(int uasid, QString component, QString device, int count);
+
     /** @brief The robot is connected **/
     void connected();
     /** @brief The robot is disconnected **/

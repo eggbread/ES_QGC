@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -106,10 +106,8 @@ TransectStyleComplexItem::TransectStyleComplexItem(Vehicle* vehicle, bool flyVie
 
     connect(this,                                       &TransectStyleComplexItem::visualTransectPointsChanged, this, &TransectStyleComplexItem::complexDistanceChanged);
     connect(this,                                       &TransectStyleComplexItem::visualTransectPointsChanged, this, &TransectStyleComplexItem::greatestDistanceToChanged);
-    connect(this,                                       &TransectStyleComplexItem::followTerrainChanged,        this, &TransectStyleComplexItem::_followTerrainChanged);
-    connect(this,                                       &TransectStyleComplexItem::wizardModeChanged,           this, &TransectStyleComplexItem::readyForSaveStateChanged);
 
-    connect(&_surveyAreaPolygon,                        &QGCMapPolygon::isValidChanged, this, &TransectStyleComplexItem::readyForSaveStateChanged);
+    connect(this,                                       &TransectStyleComplexItem::followTerrainChanged, this, &TransectStyleComplexItem::_followTerrainChanged);
 
     setDirty(false);
 }
@@ -136,6 +134,8 @@ void TransectStyleComplexItem::setDirty(bool dirty)
 
 void TransectStyleComplexItem::_save(QJsonObject& complexObject)
 {
+    ComplexMissionItem::_saveItem(complexObject);
+
     QJsonObject innerObject;
 
     innerObject[JsonHelper::jsonVersionKey] =       1;
@@ -189,6 +189,8 @@ void TransectStyleComplexItem::setSequenceNumber(int sequenceNumber)
 
 bool TransectStyleComplexItem::_load(const QJsonObject& complexObject, bool forPresets, QString& errorString)
 {
+    ComplexMissionItem::_loadItem(complexObject);
+
     QList<JsonHelper::KeyValidateInfo> keyInfoList = {
         { _jsonTransectStyleComplexItemKey, QJsonValue::Object, true },
     };
@@ -230,7 +232,6 @@ bool TransectStyleComplexItem::_load(const QJsonObject& complexObject, bool forP
         }
         _coordinate = _visualTransectPoints.count() ? _visualTransectPoints.first().value<QGeoCoordinate>() : QGeoCoordinate();
         _exitCoordinate = _visualTransectPoints.count() ? _visualTransectPoints.last().value<QGeoCoordinate>() : QGeoCoordinate();
-        _isIncomplete = false;
 
         // Load generated mission items
         _loadedMissionItemsParent = new QObject(this);
@@ -247,7 +248,7 @@ bool TransectStyleComplexItem::_load(const QJsonObject& complexObject, bool forP
     }
 
     // Load CameraCalc data
-    if (!_cameraCalc.load(innerObject[_jsonCameraCalcKey].toObject(), errorString)) {
+    if (!_cameraCalc.load(innerObject[_jsonCameraCalcKey].toObject(), forPresets, cameraInPreset(), errorString)) {
         return false;
     }
 
@@ -409,11 +410,6 @@ void TransectStyleComplexItem::_rebuildTransects(void)
     emit coordinateChanged(_coordinate);
     emit exitCoordinateChanged(_exitCoordinate);
 
-    if (_isIncomplete) {
-        _isIncomplete = false;
-        emit isIncompleteChanged();
-    }
-
     _recalcComplexDistance();
     _recalcCameraShots();
 
@@ -425,7 +421,6 @@ void TransectStyleComplexItem::_rebuildTransects(void)
 void TransectStyleComplexItem::_queryTransectsPathHeightInfo(void)
 {
     _transectsPathHeightInfo.clear();
-    emit readyForSaveStateChanged();
 
     if (_transects.count()) {
         // We don't actually send the query until this timer times out. This way we only send
@@ -470,7 +465,6 @@ void TransectStyleComplexItem::_reallyQueryTransectsPathHeightInfo(void)
 void TransectStyleComplexItem::_polyPathTerrainData(bool success, const QList<TerrainPathQuery::PathHeightInfo_t>& rgPathHeightInfo)
 {
     _transectsPathHeightInfo.clear();
-    emit readyForSaveStateChanged();
 
     if (success) {
         // Break out into individual transects
@@ -483,7 +477,6 @@ void TransectStyleComplexItem::_polyPathTerrainData(bool success, const QList<Te
             }
             pathHeightIndex++;  // There is an extra on between each transect
         }
-        emit readyForSaveStateChanged();
 
         // Now that we have terrain data we can adjust
         _adjustTransectsForTerrain();
@@ -496,31 +489,16 @@ void TransectStyleComplexItem::_polyPathTerrainData(bool success, const QList<Te
     _terrainPolyPathQuery = nullptr;
 }
 
-TransectStyleComplexItem::ReadyForSaveState TransectStyleComplexItem::readyForSaveState(void) const
+bool TransectStyleComplexItem::readyForSave(void) const
 {
-    bool terrainReady = false;
-    if (_followTerrain) {
-        if (_loadedMissionItems.count()) {
-            // We have loaded mission items. Everything is ready to go.
-            terrainReady = true;
-        } else {
-            // Survey is currently being designed. We aren't ready if we don't have terrain heights yet.
-            terrainReady = _transectsPathHeightInfo.count();
-        }
-    } else {
-        // Now following terrain so always ready on terrain
-        terrainReady = true;
-    }
-    bool polygonNotReady = !_surveyAreaPolygon.isValid();
-    return (polygonNotReady || _wizardMode) ?
-                NotReadyForSaveData :
-                (terrainReady ? ReadyForSave : NotReadyForSaveTerrain);
+    // Make sure we have the terrain data we need
+    return _followTerrain ? _transectsPathHeightInfo.count() : true;
 }
 
 void TransectStyleComplexItem::_adjustTransectsForTerrain(void)
 {
     if (_followTerrain) {
-        if (readyForSaveState() != ReadyForSave) {
+        if (!readyForSave()) {
             qCWarning(TransectStyleComplexItemLog) << "_adjustTransectPointsForTerrain called when terrain data not ready";
             qgcApp()->showMessage(tr("INTERNAL ERROR: TransectStyleComplexItem::_adjustTransectPointsForTerrain called when terrain data not ready. Plan will be incorrect."));
             return;
@@ -750,9 +728,6 @@ int TransectStyleComplexItem::lastSequenceNumber(void) const
     if (_loadedMissionItems.count()) {
         // We have stored mission items, just use those
         return _sequenceNumber + _loadedMissionItems.count() - 1;
-    } else if (_transects.count() == 0) {
-        // Polygon has not yet been set so we just return back a one item complex item for now
-        return _sequenceNumber;
     } else {
         // We have to determine from transects
         int itemCount = 0;

@@ -7,10 +7,6 @@ To build video streaming support, you will need to install the GStreamer develop
 
 If you do have the proper GStreamer development libraries installed where QGC looks for it, the QGC build system will automatically use it and build video streaming support. If you would like to disable video streaming support, you can add **DISABLE_VIDEOSTREAMING** to the **DEFINES** build variable.
 
-### Gstreamer logs
-
-For cases, when it is need to have more control over gstreamer logging than is availabe via QGroundControl's UI, it is possible to configure gstreamer logging via environment variables. Please see https://developer.gnome.org/gstreamer/stable/gst-running.html for details.
-
 ### UDP Pipeline
 
 For the time being, the RTP UDP pipeline is somewhat hardcoded, using h.264 or h.265. It's best to use a camera capable of hardware encoding either h.264 (such as the Logitech C920) or h.265. On the sender end, for RTP (UDP Streaming) you would run something like this:
@@ -30,7 +26,7 @@ Where xxx.xxx.xxx.xxx is the IP address where QGC is running.
 
 To test using a test source on localhost, you can run this command:
 ```
-gst-launch-1.0 videotestsrc pattern=ball ! video/x-raw,width=640,height=480 ! x264enc ! rtph264pay ! udpsink host=127.0.0.1 port=5600
+gst-launch-1.0 videotestsrc pattern=ball ! x264enc ! rtph264pay ! udpsink host=127.0.0.1 port=5600
 ```
 Or this one:
 ```
@@ -39,7 +35,7 @@ gst-launch-1.0 videotestsrc ! video/x-raw,width=640,height=480 ! videoconvert ! 
 
 On the receiving end, if you want to test it from the command line, you can use something like:
 ```
-gst-launch-1.0 udpsrc port=5600 caps='application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264' ! rtph264depay ! h264parse ! avdec_h264 ! autovideosink fps-update-interval=1000 sync=false
+gst-launch-1.0 udpsrc port=5600 caps='application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264' ! rtph264depay ! avdec_h264 ! autovideosink fps-update-interval=1000 sync=false
 ```
 
 ### Additional Protocols

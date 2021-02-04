@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2018 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -21,6 +21,7 @@
 #include "LinkInterface.h"
 #include "QGCLoggingCategory.h"
 #include "QGCToolbox.h"
+#include "ProtocolInterface.h"
 #include "MAVLinkProtocol.h"
 #if !defined(__mobile__)
 #include "LogReplayLink.h"
@@ -44,7 +45,7 @@ class UDPConfiguration;
 class AutoConnectSettings;
 class LogReplayLink;
 
-/// @brief Manage communication links
+/// Manage communication links
 ///
 /// The Link Manager organizes the physical Links. It can manage arbitrary
 /// links and takes care of connecting them as well assigning the correct
@@ -54,7 +55,7 @@ class LinkManager : public QGCTool
 {
     Q_OBJECT
 
-    // Unit Test has access to private constructor/destructor
+    /// Unit Test has access to private constructor/destructor
     friend class LinkManagerTest;
 
 public:
@@ -68,7 +69,7 @@ public:
     Q_PROPERTY(QStringList          serialPortStrings   READ serialPortStrings                                                  NOTIFY commPortStringsChanged)
     Q_PROPERTY(QStringList          serialPorts         READ serialPorts                                                        NOTIFY commPortsChanged)
 
-    /// Create/Edit Link Configuration
+    // Create/Edit Link Configuration
     Q_INVOKABLE LinkConfiguration*  createConfiguration         (int type, const QString& name);
     Q_INVOKABLE LinkConfiguration*  startConfigurationEditing   (LinkConfiguration* config);
     Q_INVOKABLE void                cancelConfigurationEditing  (LinkConfiguration* config) { delete config; }

@@ -9,42 +9,30 @@ import QGroundControl.ScreenTools 1.0
 Item {
     visible: false
 
-    property var    rgDynamicObjects:   [ ]
-    property bool   empty:              rgDynamicObjects.length === 0
+    property var rgDynamicObjects: [ ]
 
-    Component.onDestruction: destroyObjects()
-
-    function createObject(sourceComponent, parentObject, addMapItem) {
+    function createObject(sourceComponent, parentObject, parentObjectIsMap) {
         var obj = sourceComponent.createObject(parentObject)
         if (obj.status === Component.Error) {
             console.log(obj.errorString())
         }
         rgDynamicObjects.push(obj)
         if (arguments.length < 3) {
-            addMapItem = false
+            parentObjectIsMap = false
         }
-        if (addMapItem) {
-            parentObject.addMapItem(obj)
+        if (parentObjectIsMap) {
+            map.addMapItem(obj)
         }
         return obj
     }
 
-    function createObjects(rgSourceComponents, parentObject, addMapItem) {
+    function createObjects(rgSourceComponents, parentObject, parentObjectIsMap) {
         if (arguments.length < 3) {
-            addMapItem = false
+            parentObjectIsMap = false
         }
         for (var i=0; i<rgSourceComponents.length; i++) {
-            createObject(rgSourceComponents[i], parentObject, addMapItem)
+            createObject(rgSourceComponents[i], parentObject, parentObjectIsMap)
         }
-    }
-
-    /// Adds the object to the list. If mapControl is specified it will aso be added to the map.
-    function addObject(object, mapControl) {
-        rgDynamicObjects.push(object)
-        if (arguments.length == 2) {
-            mapControl.addMapItem(object)
-        }
-        return object
     }
 
     function destroyObjects() {

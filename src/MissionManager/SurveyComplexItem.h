@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -51,11 +51,11 @@ public:
     double  timeBetweenShots    (void) final;
 
     // Overrides from VisualMissionionItem
-    QString             commandDescription  (void) const final { return tr("Survey"); }
-    QString             commandName         (void) const final { return tr("Survey"); }
-    QString             abbreviation        (void) const final { return tr("S"); }
-    ReadyForSaveState   readyForSaveState    (void) const final;
-    double              additionalTimeDelay (void) const final;
+    QString commandDescription  (void) const final { return tr("Survey"); }
+    QString commandName         (void) const final { return tr("Survey"); }
+    QString abbreviation        (void) const final { return tr("S"); }
+    bool    readyForSave        (void) const final;
+    double  additionalTimeDelay (void) const final;
 
     // Must match json spec for GridEntryLocation
     enum EntryLocation {

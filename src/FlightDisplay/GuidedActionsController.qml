@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -36,7 +36,7 @@ Item {
     readonly property string emergencyStopTitle:            qsTr("EMERGENCY STOP")
     readonly property string armTitle:                      qsTr("Arm")
     readonly property string disarmTitle:                   qsTr("Disarm")
-    readonly property string rtlTitle:                      qsTr("Return")
+    readonly property string rtlTitle:                      qsTr("RTL")
     readonly property string takeoffTitle:                  qsTr("Takeoff")
     readonly property string landTitle:                     qsTr("Land")
     readonly property string startMissionTitle:             qsTr("Start Mission")
@@ -51,7 +51,6 @@ Item {
     readonly property string setWaypointTitle:              qsTr("Set Waypoint")
     readonly property string gotoTitle:                     qsTr("Go To Location")
     readonly property string vtolTransitionTitle:           qsTr("VTOL Transition")
-    readonly property string roiTitle:                      qsTr("ROI")
 
     readonly property string armMessage:                        qsTr("Arm the vehicle.")
     readonly property string disarmMessage:                     qsTr("Disarm the vehicle")
@@ -61,7 +60,7 @@ Item {
     readonly property string continueMissionMessage:            qsTr("Continue the mission from the current waypoint.")
     readonly property string resumeMissionUploadFailMessage:    qsTr("Upload of resume mission failed. Confirm to retry upload")
     readonly property string landMessage:                       qsTr("Land the vehicle at the current position.")
-    readonly property string rtlMessage:                        qsTr("Return to the launch position of the vehicle.")
+    readonly property string rtlMessage:                        qsTr("Return to the home position of the vehicle.")
     readonly property string changeAltMessage:                  qsTr("Change the altitude of the vehicle up or down.")
     readonly property string gotoMessage:                       qsTr("Move the vehicle to the specified location.")
              property string setWaypointMessage:                qsTr("Adjust current waypoint to %1.").arg(_actionData)
@@ -71,7 +70,6 @@ Item {
     readonly property string mvPauseMessage:                    qsTr("Pause all vehicles at their current position.")
     readonly property string vtolTransitionFwdMessage:          qsTr("Transition VTOL to fixed wing flight.")
     readonly property string vtolTransitionMRMessage:           qsTr("Transition VTOL to multi-rotor flight.")
-    readonly property string roiMessage:                        qsTr("Make the specified location a Region Of Interest.")
 
     readonly property int actionRTL:                        1
     readonly property int actionLand:                       2
@@ -94,25 +92,19 @@ Item {
     readonly property int actionMVStartMission:             19
     readonly property int actionVtolTransitionToFwdFlight:  20
     readonly property int actionVtolTransitionToMRFlight:   21
-    readonly property int actionROI:                        22
-
-    property bool   _useChecklist:              QGroundControl.settingsManager.appSettings.useChecklist.rawValue && QGroundControl.corePlugin.options.preFlightChecklistUrl.toString().length
-    property bool   _enforceChecklist:          _useChecklist && QGroundControl.settingsManager.appSettings.enforceChecklist.rawValue
-    property bool   _canArm:                    activeVehicle ? (_useChecklist ? (_enforceChecklist ? activeVehicle.checkListState === Vehicle.CheckListPassed : true) : true) : false
 
     property bool showEmergenyStop:     _guidedActionsEnabled && !_hideEmergenyStop && _vehicleArmed && _vehicleFlying
-    property bool showArm:              _guidedActionsEnabled && !_vehicleArmed && _canArm
+    property bool showArm:              _guidedActionsEnabled && !_vehicleArmed
     property bool showDisarm:           _guidedActionsEnabled && _vehicleArmed && !_vehicleFlying
     property bool showRTL:              _guidedActionsEnabled && _vehicleArmed && activeVehicle.guidedModeSupported && _vehicleFlying && !_vehicleInRTLMode
-    property bool showTakeoff:          _guidedActionsEnabled && activeVehicle.takeoffVehicleSupported && !_vehicleFlying && _canArm
+    property bool showTakeoff:          _guidedActionsEnabled && activeVehicle.takeoffVehicleSupported && !_vehicleFlying
     property bool showLand:             _guidedActionsEnabled && activeVehicle.guidedModeSupported && _vehicleArmed && !activeVehicle.fixedWing && !_vehicleInLandMode
-    property bool showStartMission:     _guidedActionsEnabled && _missionAvailable && !_missionActive && !_vehicleFlying && _canArm
+    property bool showStartMission:     _guidedActionsEnabled && _missionAvailable && !_missionActive && !_vehicleFlying
     property bool showContinueMission:  _guidedActionsEnabled && _missionAvailable && !_missionActive && _vehicleArmed && _vehicleFlying && (_currentMissionIndex < _missionItemCount - 1)
-    property bool showPause:            _guidedActionsEnabled && _vehicleArmed && activeVehicle.pauseVehicleSupported && _vehicleFlying && !_vehiclePaused && !_fixedWingOnApproach
+    property bool showPause:            _guidedActionsEnabled && _vehicleArmed && activeVehicle.pauseVehicleSupported && _vehicleFlying && !_vehiclePaused
     property bool showChangeAlt:        _guidedActionsEnabled && _vehicleFlying && activeVehicle.guidedModeSupported && _vehicleArmed && !_missionActive
-    property bool showOrbit:            _guidedActionsEnabled && _vehicleFlying && __orbitSupported && !_missionActive
-    property bool showROI:              _guidedActionsEnabled && _vehicleFlying && __roiSupported && !_missionActive
-    property bool showLandAbort:        _guidedActionsEnabled && _vehicleFlying && _fixedWingOnApproach
+    property bool showOrbit:            _guidedActionsEnabled && !_hideOrbit && _vehicleFlying && activeVehicle.orbitModeSupported && !_missionActive
+    property bool showLandAbort:        _guidedActionsEnabled && _vehicleFlying && activeVehicle.fixedWing && _vehicleLanding
     property bool showGotoLocation:     _guidedActionsEnabled && _vehicleFlying
 
     // Note: The '_missionItemCount - 2' is a hack to not trigger resume mission when a mission ends with an RTL item
@@ -121,8 +113,7 @@ Item {
     property bool guidedUIVisible:      guidedActionConfirm.visible || guidedActionList.visible
 
     property var    _corePlugin:            QGroundControl.corePlugin
-    property var    _corePluginOptions:     QGroundControl.corePlugin.options
-    property bool   _guidedActionsEnabled:  (!ScreenTools.isDebug && _corePluginOptions.guidedActionsRequireRCRSSI && activeVehicle) ? _rcRSSIAvailable : activeVehicle
+    property bool   _guidedActionsEnabled:  (!ScreenTools.isDebug && QGroundControl.corePlugin.options.guidedActionsRequireRCRSSI && activeVehicle) ? _rcRSSIAvailable : activeVehicle
     property string _flightMode:            activeVehicle ? activeVehicle.flightMode : ""
     property bool   _missionAvailable:      missionController.containsItems
     property bool   _missionActive:         activeVehicle ? _vehicleArmed && (_vehicleInLandMode || _vehicleInRTLMode || _vehicleInMissionMode) : false
@@ -136,23 +127,19 @@ Item {
     property int    _missionItemCount:      missionController.missionItemCount
     property int    _currentMissionIndex:   missionController.currentMissionIndex
     property int    _resumeMissionIndex:    missionController.resumeMissionIndex
-    property bool   _hideEmergenyStop:      false   // This core plugin option doesn't exist in stable
-    property bool   _hideOrbit:             false   // This core plugin option doesn't exist in stable
-    property bool   _hideROI:               false   // This core plugin option doesn't exist in stable
+    property bool   _hideEmergenyStop:      !QGroundControl.corePlugin.options.guidedBarShowEmergencyStop
+    property bool   _hideOrbit:             !QGroundControl.corePlugin.options.guidedBarShowOrbit
     property bool   _vehicleWasFlying:      false
     property bool   _rcRSSIAvailable:       activeVehicle ? activeVehicle.rcRSSI > 0 && activeVehicle.rcRSSI <= 100 : false
-    property bool   _fixedWingOnApproach:   activeVehicle ? activeVehicle.fixedWing && _vehicleLanding : false
 
     // You can turn on log output for GuidedActionsController by turning on GuidedActionsControllerLog category
     property bool __guidedModeSupported:    activeVehicle ? activeVehicle.guidedModeSupported : false
     property bool __pauseVehicleSupported:  activeVehicle ? activeVehicle.pauseVehicleSupported : false
-    property bool __roiSupported:           activeVehicle ? !_hideROI && activeVehicle.roiModeSupported : false
-    property bool __orbitSupported:         activeVehicle ? !_hideOrbit && activeVehicle.orbitModeSupported : false
     property bool __flightMode:             _flightMode
 
     function _outputState() {
         if (_corePlugin.guidedActionsControllerLogging()) {
-            console.log(qsTr("activeVehicle(%1) _vehicleArmed(%2) guidedModeSupported(%3) _vehicleFlying(%4) _vehicleWasFlying(%5) _vehicleInRTLMode(%6) pauseVehicleSupported(%7) _vehiclePaused(%8) _flightMode(%9) _missionItemCount(%10) roiSupported(%11) orbitSupported(%12) _missionActive(%13) _hideROI(%14) _hideOrbit(%15)").arg(activeVehicle ? 1 : 0).arg(_vehicleArmed ? 1 : 0).arg(__guidedModeSupported ? 1 : 0).arg(_vehicleFlying ? 1 : 0).arg(_vehicleWasFlying ? 1 : 0).arg(_vehicleInRTLMode ? 1 : 0).arg(__pauseVehicleSupported ? 1 : 0).arg(_vehiclePaused ? 1 : 0).arg(_flightMode).arg(_missionItemCount).arg(__roiSupported).arg(__orbitSupported).arg(_missionActive).arg(_hideROI).arg(_hideOrbit))
+            console.log(qsTr("activeVehicle(%1) _vehicleArmed(%2) guidedModeSupported(%3) _vehicleFlying(%4) _vehicleWasFlying(%5) _vehicleInRTLMode(%6) pauseVehicleSupported(%7) _vehiclePaused(%8) _flightMode(%9) _missionItemCount(%10)").arg(activeVehicle ? 1 : 0).arg(_vehicleArmed ? 1 : 0).arg(__guidedModeSupported ? 1 : 0).arg(_vehicleFlying ? 1 : 0).arg(_vehicleWasFlying ? 1 : 0).arg(_vehicleInRTLMode ? 1 : 0).arg(__pauseVehicleSupported ? 1 : 0).arg(_vehiclePaused ? 1 : 0).arg(_flightMode).arg(_missionItemCount))
         }
     }
 
@@ -170,10 +157,7 @@ Item {
     on__FlightModeChanged:              _outputState()
     on__GuidedModeSupportedChanged:     _outputState()
     on__PauseVehicleSupportedChanged:   _outputState()
-    on__RoiSupportedChanged:            _outputState()
-    on__OrbitSupportedChanged:          _outputState()
     on_MissionItemCountChanged:         _outputState()
-    on_MissionActiveChanged:            _outputState()
 
     on_CurrentMissionIndexChanged: {
         if (_corePlugin.guidedActionsControllerLogging()) {
@@ -209,35 +193,7 @@ Item {
         }
         _outputState()
     }
-    onShowChangeAltChanged: {
-        if (_corePlugin.guidedActionsControllerLogging()) {
-            console.log("showChangeAlt", showChangeAlt)
-        }
-        _outputState()
-    }
-    onShowROIChanged: {
-        if (_corePlugin.guidedActionsControllerLogging()) {
-            console.log("showROI", showROI)
-        }
-        _outputState()
-    }
-    onShowOrbitChanged: {
-        if (_corePlugin.guidedActionsControllerLogging()) {
-            console.log("showOrbit", showOrbit)
-        }
-        _outputState()
-    }
-    onShowGotoLocationChanged: {
-        if (_corePlugin.guidedActionsControllerLogging()) {
-            console.log("showGotoLocation", showGotoLocation)
-        }
-        _outputState()
-    }
-    onShowLandAbortChanged: {
-        if (showLandAbort) {
-            confirmAction(actionLandAbort)
-        }
-    }
+    // End of hack
 
     on_VehicleFlyingChanged: {
         _outputState()
@@ -385,11 +341,6 @@ Item {
             confirmDialog.message = vtolTransitionMRMessage
             confirmDialog.hideTrigger = true
             break
-        case actionROI:
-            confirmDialog.title = roiTitle
-            confirmDialog.message = roiMessage
-            confirmDialog.hideTrigger = Qt.binding(function() { return !showROI })
-            break;
         default:
             console.warn("Unknown actionCode", actionCode)
             return
@@ -464,9 +415,6 @@ Item {
             break
         case actionVtolTransitionToMRFlight:
             activeVehicle.vtolInFwdFlight = false
-            break
-        case actionROI:
-            activeVehicle.guidedModeROI(actionData)
             break
         default:
             console.warn(qsTr("Internal error: unknown actionCode"), actionCode)

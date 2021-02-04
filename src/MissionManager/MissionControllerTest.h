@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -36,6 +36,8 @@ private slots:
     void _testLoadJsonSectionAvailable(void);
     void _testEmptyVehicleAPM(void);
     void _testEmptyVehiclePX4(void);
+    void _testAddWayppointAPM(void);
+    void _testAddWayppointPX4(void);
 
 private:
 #if 0

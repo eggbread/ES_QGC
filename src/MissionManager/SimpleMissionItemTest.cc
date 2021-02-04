@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -167,7 +167,7 @@ void SimpleMissionItemTest::_testEditorFacts(void)
 
 void SimpleMissionItemTest::_testDefaultValues(void)
 {
-    SimpleMissionItem item(_offlineVehicle, false /* flyView */, false /* forLoad */, nullptr);
+    SimpleMissionItem item(_offlineVehicle, false /* flyView */, nullptr);
 
     item.missionItem().setCommand(MAV_CMD_NAV_WAYPOINT);
     item.missionItem().setFrame(MAV_FRAME_GLOBAL_RELATIVE_ALT);

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -160,38 +160,6 @@ void MAVLinkProtocol::resetMetadataForLink(LinkInterface *link)
 }
 
 /**
- * This method parses all outcoming bytes and log a MAVLink packet.
- * @param link The interface to read from
- * @see LinkInterface
- **/
-
-void MAVLinkProtocol::logSentBytes(LinkInterface* link, QByteArray b){
-
-    uint8_t bytes_time[sizeof(quint64)];
-
-    Q_UNUSED(link);
-    if (!_logSuspendError && !_logSuspendReplay && _tempLogFile.isOpen()) {
-
-        quint64 time = static_cast<quint64>(QDateTime::currentMSecsSinceEpoch() * 1000);
-
-        qToBigEndian(time,bytes_time);
-
-        b.insert(0,QByteArray((const char*)bytes_time,sizeof(bytes_time)));
-
-        int len = b.count();
-
-        if(_tempLogFile.write(b) != len)
-        {
-            // If there's an error logging data, raise an alert and stop logging.
-            emit protocolStatusMessage(tr("MAVLink Protocol"), tr("MAVLink Logging failed. Could not write to file %1, logging disabled.").arg(_tempLogFile.fileName()));
-            _stopLogging();
-            _logSuspendError = true;
-        }
-    }
-
-}
-
-/**
  * This method parses all incoming bytes and constructs a MAVLink packet.
  * It can handle multiple links in parallel, as each link has it's own buffer/
  * parsing state machine.
@@ -213,10 +181,15 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
     static int  nonmavlinkCount = 0;
     static bool checkedUserNonMavlink = false;
     static bool warnedUserNonMavlink  = false;
-
+    bool ack_received = false;
     for (int position = 0; position < b.size(); position++) {
         if (mavlink_parse_char(mavlinkChannel, static_cast<uint8_t>(b[position]), &_message, &_status)) {
             // Got a valid message
+            if (_message.msgid == MAVLINK_MSG_ID_COMMAND_ACK){
+                qDebug() << _message.msgid << _message.payload64;
+
+            }
+
             if (!link->decodedFirstMavlinkPacket()) {
                 link->setDecodedFirstMavlinkPacket(true);
                 mavlink_status_t* mavlinkStatus = mavlink_get_channel_status(mavlinkChannel);
@@ -233,6 +206,7 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
             uint8_t lastSeq = lastIndex[_message.sysid][_message.compid];
             uint8_t expectedSeq = lastSeq + 1;
             // Increase receive counter
+
             totalReceiveCounter[mavlinkChannel]++;
             // Determine what the next expected sequence number is, accounting for
             // never having seen a message for this system/component pair.
@@ -243,6 +217,7 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
             }
             // And if we didn't encounter that sequence number, record the error
             //int foo = 0;
+
             if (_message.seq != expectedSeq)
             {
                 //foo = 1;
@@ -258,7 +233,7 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
             }
 
             // And update the last sequence number for this system/component pair
-            lastIndex[_message.sysid][_message.compid] = _message.seq;;
+            lastIndex[_message.sysid][_message.compid] = _message.seq;
             // Calculate new loss ratio
             uint64_t totalSent = totalReceiveCounter[mavlinkChannel] + totalLossCounter[mavlinkChannel];
             float receiveLossPercent = static_cast<float>(static_cast<double>(totalLossCounter[mavlinkChannel]) / static_cast<double>(totalSent));
@@ -319,11 +294,6 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
                 emit vehicleHeartbeatInfo(link, _message.sysid, _message.compid, highLatency2.autopilot, highLatency2.type);
             }
 
-#if 0
-            // Given the current state of SiK Radio firmwares there is no way to make the code below work.
-            // The ArduPilot implementation of SiK Radio firmware always sends MAVLINK_MSG_ID_RADIO_STATUS as a mavlink 1
-            // packet even if the vehicle is sending Mavlink 2.
-
             // Detect if we are talking to an old radio not supporting v2
             mavlink_status_t* mavlinkStatus = mavlink_get_channel_status(mavlinkChannel);
             if (_message.msgid == MAVLINK_MSG_ID_RADIO_STATUS && _radio_version_mismatch_count != -1) {
@@ -342,7 +312,6 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
                 qDebug() << "Switching outbound to mavlink 1.0 due to incoming mavlink 1.0 packet:" << mavlinkStatus << mavlinkChannel << mavlinkStatus->flags;
                 mavlinkStatus->flags |= MAVLINK_STATUS_FLAG_OUT_MAVLINK1;
             }
-#endif
 
             // Update MAVLink status on every 32th packet
             if ((totalReceiveCounter[mavlinkChannel] & 0x1F) == 0) {
@@ -353,6 +322,8 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
             // kind of inefficient, but no issue for a groundstation pc.
             // It buys as reentrancy for the whole code over all threads
             emit messageReceived(link, _message);
+            // Message Count
+
             // Reset message parsing
             memset(&_status,  0, sizeof(_status));
             memset(&_message, 0, sizeof(_message));
@@ -400,7 +371,7 @@ void MAVLinkProtocol::setSystemId(int id)
 /** @return Component id of this application */
 int MAVLinkProtocol::getComponentId()
 {
-    return MAV_COMP_ID_MISSIONPLANNER;
+    return 0;
 }
 
 void MAVLinkProtocol::enableVersionCheck(bool enabled)

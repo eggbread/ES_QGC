@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -152,6 +152,7 @@ LinkInterface* LinkManager::createConnectedLink(SharedLinkConfigurationPointer& 
         break;
     }
     if (pLink) {
+        // new link start
         _addLink(pLink);
         connectLink(pLink);
     }
@@ -197,9 +198,9 @@ void LinkManager::_addLink(LinkInterface* link)
         emit newLink(link);
     }
 
+    // 해당 link 관련해서 callback 함수 연결
     connect(link, &LinkInterface::communicationError,   _app,               &QGCApplication::criticalMessageBoxOnMainThread);
     connect(link, &LinkInterface::bytesReceived,        _mavlinkProtocol,   &MAVLinkProtocol::receiveBytes);
-    connect(link, &LinkInterface::bytesSent,            _mavlinkProtocol,   &MAVLinkProtocol::logSentBytes);
 
     _mavlinkProtocol->resetMetadataForLink(link);
     _mavlinkProtocol->setVersion(_mavlinkProtocol->getCurrentVersion());
@@ -762,7 +763,6 @@ bool LinkManager::endConfigurationEditing(LinkConfiguration* config, LinkConfigu
         saveLinkConfigurationList();
         // Tell link about changes (if any)
         config->updateSettings();
-        emit config->nameChanged(config->name());
         // Discard temporary duplicate
         delete editedConfig;
     } else {

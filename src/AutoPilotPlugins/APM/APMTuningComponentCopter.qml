@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -64,9 +64,7 @@ SetupPage {
             ExclusiveGroup { id: returnAltRadioGroup }
 
             Component.onCompleted: {
-                // We use QtCharts only on Desktop platforms
                 showAdvanced = !ScreenTools.isMobile
-
                 // Qml Sliders have a strange behavior in which they first set Slider::value to some internal
                 // setting and then set Slider::value to the bound properties value. If you have an onValueChanged
                 // handler which updates your property with the new value, this first value change will trash
@@ -430,7 +428,7 @@ SetupPage {
                                     FactTextField {
                                         id:                 tuneMinField
                                         validator:          DoubleValidator {bottom: 0; top: 32767;}
-                                        fact:               controller.getParameterFact(-1, "r.TUNE_MAX")
+                                        fact:               controller.getParameterFact(-1, "TUNE_LOW")
                                     }
 
                                     QGCLabel {
@@ -442,7 +440,7 @@ SetupPage {
                                     FactTextField {
                                         id:                 tuneMaxField
                                         validator:          DoubleValidator {bottom: 0; top: 32767;}
-                                        fact:               controller.getParameterFact(-1, "r.TUNE_MIN")
+                                        fact:               controller.getParameterFact(-1, "TUNE_HIGH")
                                     }
                                 }
                             } // Column - Channel 6 Tuning option

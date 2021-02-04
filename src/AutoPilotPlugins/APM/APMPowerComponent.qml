@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -79,10 +79,9 @@ SetupPage {
 
                             QGCLabel { text: qsTr("Battery1 monitor:") }
                             FactComboBox {
-                                id:             monitor1Combo
-                                fact:           _batt1Monitor
-                                indexModel:     false
-                                sizeToContents: true
+                                id:         monitor1Combo
+                                fact:       _batt1Monitor
+                                indexModel: false
                             }
                         }
 
@@ -165,10 +164,9 @@ SetupPage {
 
                             QGCLabel { text: qsTr("Battery2 monitor:") }
                             FactComboBox {
-                                id:             monitor2Combo
-                                fact:           _batt2Monitor
-                                indexModel:     false
-                                sizeToContents: true
+                                id:         monitor2Combo
+                                fact:       _batt2Monitor
+                                indexModel: false
                             }
                         }
 
@@ -400,7 +398,6 @@ SetupPage {
                     id:                     sensorCombo
                     Layout.minimumWidth:    _fieldWidth
                     model:                  sensorModel
-                    textRole:               "text"
 
                     onActivated: {
                         if (index < sensorModel.count - 1) {

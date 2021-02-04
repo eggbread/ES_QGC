@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -40,7 +40,7 @@
         c << _colorInfoMap[Dark][ColorGroupDisabled][QStringLiteral(#NAME)].name(QColor::HexRgb); \
         return c; \
     } \
-    void SETNAME(const QColor& color) { _colorInfoMap[_theme][_colorGroupEnabled  ? ColorGroupEnabled : ColorGroupDisabled][QStringLiteral(#NAME)] = color; _signalPaletteChangeToAll(); }
+    void SETNAME(QColor& color) { _colorInfoMap[_theme][_colorGroupEnabled  ? ColorGroupEnabled : ColorGroupDisabled][QStringLiteral(#NAME)] = color; _signalPaletteChangeToAll(); }
 
 /*!
  QGCPalette is used in QML ui to expose color properties for the QGC palette. There are two
@@ -89,6 +89,8 @@ public:
     DEFINE_QGC_COLOR(windowShadeDark,       setWindowShadeDark)
     DEFINE_QGC_COLOR(text,                  setText)
     DEFINE_QGC_COLOR(warningText,           setWarningText)
+    DEFINE_QGC_COLOR(warningBackground,     setWarningBackground)
+    DEFINE_QGC_COLOR(warningBorder,         setWarningBorder)
     DEFINE_QGC_COLOR(button,                setButton)
     DEFINE_QGC_COLOR(buttonText,            setButtonText)
     DEFINE_QGC_COLOR(buttonHighlight,       setButtonHighlight)
@@ -115,9 +117,6 @@ public:
     DEFINE_QGC_COLOR(alertText,             setAlertText)
     DEFINE_QGC_COLOR(missionItemEditor,     setMissionItemEditor)
     DEFINE_QGC_COLOR(hoverColor,            setHoverColor)
-    DEFINE_QGC_COLOR(statusFailedText,      setstatusFailedText)
-    DEFINE_QGC_COLOR(statusPassedText,      setstatusPassedText)
-    DEFINE_QGC_COLOR(statusPendingText,     setstatusPendingText)
 
      QGCPalette(QObject* parent = nullptr);
     ~QGCPalette();

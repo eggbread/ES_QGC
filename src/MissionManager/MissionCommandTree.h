@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -62,8 +62,7 @@ public:
 
     const MissionCommandUIInfo* getUIInfo(Vehicle* vehicle, MAV_CMD command);
 
-    /// @param showFlyThroughCommands - true: al commands shows, false: filter out commands which the vehicle flies through (specifiedCoordinate=true, standaloneCoordinate=false)
-    Q_INVOKABLE QVariantList getCommandsForCategory(Vehicle* vehicle, const QString& category, bool showFlyThroughCommands);
+   Q_INVOKABLE QVariantList getCommandsForCategory(Vehicle* vehicle, const QString& category);
 
     // Overrides from QGCTool
     virtual void setToolbox(QGCToolbox* toolbox);

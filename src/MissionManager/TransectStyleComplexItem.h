@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -99,7 +99,7 @@ public:
     double          specifiedGimbalYaw      (void) final { return std::numeric_limits<double>::quiet_NaN(); }
     double          specifiedGimbalPitch    (void) final { return std::numeric_limits<double>::quiet_NaN(); }
     void            setMissionFlightStatus  (MissionController::MissionFlightStatus_t& missionFlightStatus) final;
-    ReadyForSaveState readyForSaveState     (void) const override;
+    bool            readyForSave            (void) const override;
     QString         commandDescription      (void) const override { return tr("Transect"); }
     QString         commandName             (void) const override { return tr("Transect"); }
     QString         abbreviation            (void) const override { return tr("T"); }

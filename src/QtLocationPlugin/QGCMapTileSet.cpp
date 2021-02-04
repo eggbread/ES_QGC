@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -12,7 +12,7 @@
  * @file
  *   @brief Map Tile Set
  *
- *   @author Gus Grubba <gus@auterion.com>
+ *   @author Gus Grubba <mavlink@grubba.com>
  *
  */
 
@@ -47,7 +47,7 @@ QGCCachedTileSet::QGCCachedTileSet(const QString& name)
     , _deleting(false)
     , _downloading(false)
     , _id(0)
-    , _type("Invalid")
+    , _type(UrlFactory::Invalid)
     , _networkManager(nullptr)
     , _errorCount(0)
     , _noMoreTiles(false)
@@ -61,8 +61,9 @@ QGCCachedTileSet::QGCCachedTileSet(const QString& name)
 //-----------------------------------------------------------------------------
 QGCCachedTileSet::~QGCCachedTileSet()
 {
-    delete _networkManager;
-    _networkManager = nullptr;
+    if(_networkManager) {
+        delete _networkManager;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -200,15 +201,7 @@ void QGCCachedTileSet::_doneWithDownload()
         _totalTileCount = _savedTileCount;
         _totalTileSize  = _savedTileSize;
         //-- Too expensive to compute the real size now. Estimate it for the time being.
-        quint32 avg;
-        if(_savedTileSize != 0){
-            avg = _savedTileSize / _savedTileCount;
-        }
-        else{
-            qWarning() << "QGCMapEngineManager::_doneWithDownload _savedTileSize=0 !";
-            avg = 0;
-        }
-
+        quint32 avg = _savedTileSize / _savedTileCount;
         _uniqueTileSize = _uniqueTileCount * avg;
     }
     emit totalTileCountChanged();
@@ -286,8 +279,8 @@ QGCCachedTileSet::_networkReplyFinished()
             }
             qCDebug(QGCCachedTileSetLog) << "Tile fetched" << hash;
             QByteArray image = reply->readAll();
-            QString type = getQGCMapEngine()->hashToType(hash);
-            if (type == "Airmap Elevation" ) {
+            UrlFactory::MapType type = getQGCMapEngine()->hashToType(hash);
+            if (type == UrlFactory::MapType::AirmapElevation) {
                 image = TerrainTile::serialize(image);
             }
             QString format = getQGCMapEngine()->urlFactory()->getImageFormat(type, image);

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -201,8 +201,9 @@ void CameraCalc::save(QJsonObject& json) const
     }
 }
 
-bool CameraCalc::load(const QJsonObject& json, QString& errorString)
+bool CameraCalc::load(const QJsonObject& json, bool forPresets, bool cameraSpecInPreset, QString& errorString)
 {
+    qDebug() << "CameraCalc::load" << forPresets << cameraSpecInPreset;
     QJsonObject v1Json = json;
 
     if (!json.contains(JsonHelper::jsonVersionKey)) {
@@ -237,14 +238,9 @@ bool CameraCalc::load(const QJsonObject& json, QString& errorString)
         return false;
     }
 
-    _disableRecalc = true;
+    _disableRecalc = !forPresets;
 
     _distanceToSurfaceRelative = v1Json[distanceToSurfaceRelativeName].toBool();
-
-    _cameraNameFact.setRawValue                 (v1Json[cameraNameName].toString());
-    _adjustedFootprintSideFact.setRawValue      (v1Json[adjustedFootprintSideName].toDouble());
-    _adjustedFootprintFrontalFact.setRawValue   (v1Json[adjustedFootprintFrontalName].toDouble());
-    _distanceToSurfaceFact.setRawValue          (v1Json[distanceToSurfaceName].toDouble());
 
     if (!isManualCamera()) {
         QList<JsonHelper::KeyValidateInfo> keyInfoList2 = {
@@ -261,11 +257,38 @@ bool CameraCalc::load(const QJsonObject& json, QString& errorString)
         _valueSetIsDistanceFact.setRawValue (v1Json[valueSetIsDistanceName].toBool());
         _frontalOverlapFact.setRawValue     (v1Json[frontalOverlapName].toDouble());
         _sideOverlapFact.setRawValue        (v1Json[sideOverlapName].toDouble());
-        _imageDensityFact.setRawValue       (v1Json[imageDensityName].toDouble());
+    }
 
-        if (!CameraSpec::load(v1Json, errorString)) {
-            _disableRecalc = false;
-            return false;
+    if (forPresets) {
+        if (isManualCamera()) {
+            _distanceToSurfaceFact.setRawValue(v1Json[distanceToSurfaceName].toDouble());
+        } else {
+            if (_valueSetIsDistanceFact.rawValue().toBool()) {
+                _distanceToSurfaceFact.setRawValue(v1Json[distanceToSurfaceName].toDouble());
+            } else {
+                _imageDensityFact.setRawValue(v1Json[imageDensityName].toDouble());
+            }
+
+            if (cameraSpecInPreset) {
+                _cameraNameFact.setRawValue(v1Json[cameraNameName].toString());
+                if (!CameraSpec::load(v1Json, errorString)) {
+                    _disableRecalc = false;
+                    return false;
+                }
+            }
+        }
+    } else {
+        _cameraNameFact.setRawValue                 (v1Json[cameraNameName].toString());
+        _adjustedFootprintSideFact.setRawValue      (v1Json[adjustedFootprintSideName].toDouble());
+        _adjustedFootprintFrontalFact.setRawValue   (v1Json[adjustedFootprintFrontalName].toDouble());
+        _distanceToSurfaceFact.setRawValue          (v1Json[distanceToSurfaceName].toDouble());
+        if (!isManualCamera()) {
+            _imageDensityFact.setRawValue(v1Json[imageDensityName].toDouble());
+
+            if (!CameraSpec::load(v1Json, errorString)) {
+                _disableRecalc = false;
+                return false;
+            }
         }
     }
 

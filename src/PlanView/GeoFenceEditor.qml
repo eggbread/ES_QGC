@@ -110,10 +110,8 @@ QGCFlickable {
                     }
 
                     SectionHeader {
-                        id:             insertSection
-                        anchors.left:   parent.left
-                        anchors.right:  parent.right
-                        text:           qsTr("Insert GeoFence")
+                        id:     insertSection
+                        text:   qsTr("Insert GeoFence")
                     }
 
                     QGCButton {
@@ -141,10 +139,8 @@ QGCFlickable {
                     }
 
                     SectionHeader {
-                        id:             polygonSection
-                        anchors.left:   parent.left
-                        anchors.right:  parent.right
-                        text:           qsTr("Polygon Fences")
+                        id:     polygonSection
+                        text:   qsTr("Polygon Fences")
                     }
 
                     QGCLabel {
@@ -216,10 +212,8 @@ QGCFlickable {
                     } // GridLayout
 
                     SectionHeader {
-                        id:             circleSection
-                        anchors.left:   parent.left
-                        anchors.right:  parent.right
-                        text:           qsTr("Circular Fences")
+                        id:     circleSection
+                        text:   qsTr("Circular Fences")
                     }
 
                     QGCLabel {
@@ -308,10 +302,8 @@ QGCFlickable {
                     } // GridLayout
 
                     SectionHeader {
-                        id:             breachReturnSection
-                        anchors.left:   parent.left
-                        anchors.right:  parent.right
-                        text:           qsTr("Breach Return Point")
+                        id:     breachReturnSection
+                        text:   qsTr("Breach Return Point")
                     }
 
                     QGCButton {

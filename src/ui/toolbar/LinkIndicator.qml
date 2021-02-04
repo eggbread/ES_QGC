@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -23,9 +23,10 @@ import QGroundControl.Vehicle               1.0
 Item {
     anchors.top:    parent.top
     anchors.bottom: parent.bottom
-    width:          priorityLinkSelector.width
+    width:          visible ? priorityLinkSelector.width : 0
+    visible:        _visible
 
-    property bool showIndicator: false
+    property bool _visible: false
 
     QGCLabel {
         id:                     priorityLinkSelector
@@ -65,7 +66,7 @@ Item {
                     }
                 }
 
-                showIndicator = links.length > 1 && has_hl
+                _visible = links.length > 1 && has_hl
             }
         }
 

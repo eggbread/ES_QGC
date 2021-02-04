@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -69,17 +69,13 @@ Item {
                     onActivated: {
                         _activeJoystick.setButtonAction(modelData, textAt(index))
                     }
-
-                    function _findCurrentButtonAction() {
+                    Component.onCompleted: {
                         if(_activeJoystick) {
                             var i = find(_activeJoystick.buttonActions[modelData])
                             if(i < 0) i = 0
                             currentIndex = i
                         }
                     }
-
-                    Component.onCompleted:  _findCurrentButtonAction()
-                    onModelChanged:         _findCurrentButtonAction()
                 }
                 QGCCheckBox {
                     id:                         repeatCheck

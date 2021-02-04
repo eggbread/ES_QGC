@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -271,15 +271,18 @@ void FirmwarePlugin::guidedModeGotoLocation(Vehicle* vehicle, const QGeoCoordina
     qgcApp()->showMessage(guided_mode_not_supported_by_vehicle);
 }
 
-void FirmwarePlugin::guidedModeChangeAltitude(Vehicle*, double)
+void FirmwarePlugin::guidedModeChangeAltitude(Vehicle* vehicle, double altitudeRel)
 {
     // Not supported by generic vehicle
+    Q_UNUSED(vehicle);
+    Q_UNUSED(altitudeRel);
     qgcApp()->showMessage(guided_mode_not_supported_by_vehicle);
 }
 
-void FirmwarePlugin::startMission(Vehicle*)
+void FirmwarePlugin::startMission(Vehicle* vehicle)
 {
     // Not supported by generic vehicle
+    Q_UNUSED(vehicle);
     qgcApp()->showMessage(guided_mode_not_supported_by_vehicle);
 }
 
@@ -290,50 +293,56 @@ const FirmwarePlugin::remapParamNameMajorVersionMap_t& FirmwarePlugin::paramName
     return remap;
 }
 
-int FirmwarePlugin::remapParamNameHigestMinorVersionNumber(int) const
+int FirmwarePlugin::remapParamNameHigestMinorVersionNumber(int majorVersionNumber) const
 {
+    Q_UNUSED(majorVersionNumber);
     return 0;
 }
 
-QString FirmwarePlugin::vehicleImageOpaque(const Vehicle*) const
+QString FirmwarePlugin::vehicleImageOpaque(const Vehicle* vehicle) const
 {
+    Q_UNUSED(vehicle);
     return QStringLiteral("/qmlimages/vehicleArrowOpaque.svg");
 }
 
-QString FirmwarePlugin::vehicleImageOutline(const Vehicle*) const
+QString FirmwarePlugin::vehicleImageOutline(const Vehicle* vehicle) const
 {
+    Q_UNUSED(vehicle);
     return QStringLiteral("/qmlimages/vehicleArrowOutline.svg");
 }
 
-QString FirmwarePlugin::vehicleImageCompass(const Vehicle*) const
+QString FirmwarePlugin::vehicleImageCompass(const Vehicle* vehicle) const
 {
+    Q_UNUSED(vehicle);
     return QStringLiteral("/qmlimages/compassInstrumentArrow.svg");
 }
 
-const QVariantList &FirmwarePlugin::toolBarIndicators(const Vehicle*)
+const QVariantList &FirmwarePlugin::toolBarIndicators(const Vehicle* vehicle)
 {
+    Q_UNUSED(vehicle);
     //-- Default list of indicators for all vehicles.
     if(_toolBarIndicatorList.size() == 0) {
         _toolBarIndicatorList = QVariantList({
+            QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/MultiVehicleSelector.qml")),
             QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/MessageIndicator.qml")),
             QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/GPSIndicator.qml")),
             QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/TelemetryRSSIIndicator.qml")),
             QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/RCRSSIIndicator.qml")),
             QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/BatteryIndicator.qml")),
-            QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/GPSRTKIndicator.qml")),
-            QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/ROIIndicator.qml")),
-            QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/ArmedIndicator.qml")),
             QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/ModeIndicator.qml")),
             QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/VTOLModeIndicator.qml")),
-            QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/MultiVehicleSelector.qml")),
+            QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/ArmedIndicator.qml")),
+            QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/GPSRTKIndicator.qml")),
             QVariant::fromValue(QUrl::fromUserInput("qrc:/toolbar/LinkIndicator.qml")),
         });
     }
     return _toolBarIndicatorList;
 }
 
-const QVariantList& FirmwarePlugin::cameraList(const Vehicle*)
+const QVariantList& FirmwarePlugin::cameraList(const Vehicle* vehicle)
 {
+    Q_UNUSED(vehicle);
+
     if (_cameraList.size() == 0) {
         CameraMetaData* metaData;
 
@@ -824,14 +833,6 @@ void FirmwarePlugin::checkIfIsLatestStable(Vehicle* vehicle)
             _versionFileDownloadFinished(remoteFile, localFile, vehicle);
             sender()->deleteLater();
         });
-    connect(
-          downloader,
-          &QGCFileDownload::error,
-          this,
-          [=](QString errorMsg) {
-              qCDebug(FirmwarePluginLog) << "Failed to download the latest fw version file. Error: " << errorMsg;
-              downloader->deleteLater();
-          });
     downloader->download(versionFile);
 }
 
@@ -907,29 +908,4 @@ int FirmwarePlugin::versionCompare(Vehicle* vehicle, QString& compare)
 QString FirmwarePlugin::gotoFlightMode(void) const
 {
     return QString();
-}
-
-void FirmwarePlugin::sendGCSMotionReport(Vehicle* vehicle, FollowMe::GCSMotionReport& motionReport, uint8_t estimationCapabilities)
-{
-    MAVLinkProtocol* mavlinkProtocol = qgcApp()->toolbox()->mavlinkProtocol();
-
-    mavlink_follow_target_t follow_target = {};
-
-    follow_target.timestamp =           qgcApp()->msecsSinceBoot();
-    follow_target.est_capabilities =    estimationCapabilities;
-    follow_target.position_cov[0] =     static_cast<float>(motionReport.pos_std_dev[0]);
-    follow_target.position_cov[2] =     static_cast<float>(motionReport.pos_std_dev[2]);
-    follow_target.alt =                 static_cast<float>(motionReport.altMetersAMSL);
-    follow_target.lat =                 motionReport.lat_int;
-    follow_target.lon =                 motionReport.lon_int;
-    follow_target.vel[0] =              static_cast<float>(motionReport.vxMetersPerSec);
-    follow_target.vel[1] =              static_cast<float>(motionReport.vyMetersPerSec);
-
-    mavlink_message_t message;
-    mavlink_msg_follow_target_encode_chan(static_cast<uint8_t>(mavlinkProtocol->getSystemId()),
-                                          static_cast<uint8_t>(mavlinkProtocol->getComponentId()),
-                                          vehicle->priorityLink()->mavlinkChannel(),
-                                          &message,
-                                          &follow_target);
-    vehicle->sendMessageOnLink(vehicle->priorityLink(), message);
 }

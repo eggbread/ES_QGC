@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -147,16 +147,11 @@ AnalyzePage {
                             var o = logController.model.get(rowIndex)
                             if (o) o.selected = true
                         })
-                        if (ScreenTools.isMobile) {
-                            // You can't pick folders in mobile, only default location is used
-                            logController.download()
-                        } else {
-                            fileDialog.title =          qsTr("Select save directory")
-                            fileDialog.selectExisting = true
-                            fileDialog.folder =         QGroundControl.settingsManager.appSettings.logSavePath
-                            fileDialog.selectFolder =   true
-                            fileDialog.openForLoad()
-                        }
+                        fileDialog.title =          qsTr("Select save directory")
+                        fileDialog.selectExisting = true
+                        fileDialog.folder =         QGroundControl.settingsManager.appSettings.logSavePath
+                        fileDialog.selectFolder =   true
+                        fileDialog.openForLoad()
                     }
                     QGCFileDialog {
                         id: fileDialog
@@ -181,7 +176,6 @@ AnalyzePage {
                             message:    qsTr("All log files will be erased permanently. Is this really what you want?")
                             function accept() {
                                 logController.eraseAll()
-                                hideDialog()
                             }
                         }
                     }

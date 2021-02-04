@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -97,7 +97,7 @@ void FWLandingPatternTest::_testAppendSectionItems(void)
     QmlObjectListModel* simpleItems = new QmlObjectListModel(this);
 
     for (MissionItem* item: rgMissionItems) {
-        SimpleMissionItem* simpleItem = new SimpleMissionItem(_offlineVehicle, false /* flyView */, false /* forLoad */, simpleItems);
+        SimpleMissionItem* simpleItem = new SimpleMissionItem(_offlineVehicle, false /* flyView */, simpleItems);
         simpleItem->missionItem() = *item;
         simpleItems->append(simpleItem);
     }
@@ -118,7 +118,7 @@ void FWLandingPatternTest::_testAppendSectionItems(void)
     _fwItem->appendMissionItems(rgMissionItems, this);
     simpleItems = new QmlObjectListModel(this);
     for (MissionItem* item: rgMissionItems) {
-        SimpleMissionItem* simpleItem = new SimpleMissionItem(_offlineVehicle, false /* flyView */, false /* forLoad */, simpleItems);
+        SimpleMissionItem* simpleItem = new SimpleMissionItem(_offlineVehicle, false /* flyView */, simpleItems);
         simpleItem->missionItem() = *item;
         simpleItems->append(simpleItem);
     }

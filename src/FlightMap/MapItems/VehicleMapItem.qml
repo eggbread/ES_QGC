@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -37,6 +37,16 @@ MapQuickItem {
     property var    _map:           map
     property bool   _multiVehicle:  QGroundControl.multiVehicleManager.vehicles.count > 1
 
+    property int _remainTime: 60
+
+    Timer {
+        id:             connectionTimer
+        interval:       1000
+        repeat:         true
+        running:        vehicle ? vehicle.connectionLost : false
+        onTriggered:    _remainTime--
+    }
+
     sourceItem: Item {
         id:         vehicleItem
         width:      vehicleIcon.width
@@ -46,7 +56,7 @@ MapQuickItem {
         Rectangle {
             id:                 vehicleShadow
             anchors.fill:       vehicleIcon
-            color:              Qt.rgba(1,1,1,1)
+            color:              Qt.rgba(24,200,100,1)
             radius:             width * 0.5
             visible:            false
         }
@@ -57,7 +67,7 @@ MapQuickItem {
             verticalOffset:     4
             radius:             32.0
             samples:            65
-            color:              Qt.rgba(0.94,0.91,0,0.5)
+            color:              Qt.rgba(0.94,0.91,0,1)
             source:             vehicleShadow
         }
         Image {
@@ -80,7 +90,7 @@ MapQuickItem {
             anchors.horizontalCenter:   parent.horizontalCenter
             map:                        _map
             text:                       vehicleLabelText
-            font.pointSize:             _adsbVehicle ? ScreenTools.defaultFontPointSize : ScreenTools.smallFontPointSize
+            font.pointSize:             ScreenTools.smallFontPointSize
             visible:                    _adsbVehicle ? !isNaN(altitude) : _multiVehicle
             property string vehicleLabelText: visible ?
                                                   (_adsbVehicle ?
@@ -88,6 +98,31 @@ MapQuickItem {
                                                        (_multiVehicle ? qsTr("Vehicle %1").arg(vehicle.id) : "")) :
                                                   ""
 
+        }
+
+//        QGCMapLabel {
+//            id:                         vehicleConnectionStatus
+//            anchors.top:                parent.top
+//            anchors.horizontalCenter:   parent.horizontalCenter
+//            map:                        _map
+//            text:                       vehicleLabelText
+//            font.pointSize:             ScreenTools.smallFontPointSize
+//            visible:                    _adsbVehicle ? !isNaN(altitude) : true
+//            property string vehicleLabelText: visible ?
+//                                                  (_adsbVehicle ?
+//                                                       QGroundControl.metersToAppSettingsDistanceUnits(altitude).toFixed(0) + " " + QGroundControl.appSettingsDistanceUnitsString :
+//                                                       qsTr("remainTime %1").arg(_remainTime)) :
+//                                                  ""
+//        }
+
+        QGCMapLabel {
+            anchors.top:                vehicleLabel.bottom
+            anchors.horizontalCenter:   parent.horizontalCenter
+            map:                        _map
+            text:                       vehicleLabelText
+            font.pointSize:             ScreenTools.smallFontPointSize
+            visible:                    _adsbVehicle ? !isNaN(altitude) : _multiVehicle
+            property string vehicleLabelText: visible && _adsbVehicle ? callsign : ""
         }
     }
 }

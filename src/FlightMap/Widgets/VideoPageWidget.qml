@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -26,7 +26,7 @@ import QGroundControl.FactControls      1.0
 /// Video streaming page for Instrument Panel PageView
 Item {
     width:              pageWidth
-    height:             videoGrid.y + videoGrid.height + _margins
+    height:             videoGrid.height + (ScreenTools.defaultFontPixelHeight * 2)
     anchors.margins:    ScreenTools.defaultFontPixelWidth * 2
     anchors.centerIn:   parent
 
@@ -39,19 +39,15 @@ Item {
     property int    _curCameraIndex:        _dynamicCameras ? _dynamicCameras.currentCamera : 0
     property bool   _isCamera:              _dynamicCameras ? _dynamicCameras.cameras.count > 0 : false
     property var    _camera:                _isCamera ? (_dynamicCameras.cameras.get(_curCameraIndex) && _dynamicCameras.cameras.get(_curCameraIndex).paramComplete ? _dynamicCameras.cameras.get(_curCameraIndex) : null) : null
-    property real   _margins:               ScreenTools.defaultFontPixelWidth / 2
 
     QGCPalette { id:qgcPal; colorGroupEnabled: true }
 
     GridLayout {
         id:                 videoGrid
-        anchors.margins:    _margins
-        anchors.top:        parent.top
-        anchors.left:       parent.left
-        anchors.right:      parent.right
         columns:            2
-        columnSpacing:      _margins
+        columnSpacing:      ScreenTools.defaultFontPixelWidth * 2
         rowSpacing:         ScreenTools.defaultFontPixelHeight
+        anchors.centerIn:   parent
         Connections {
             // For some reason, the normal signal is not reflected in the control below
             target: QGroundControl.settingsManager.videoSettings.streamEnabled
@@ -61,7 +57,7 @@ Item {
         }
         // Enable/Disable Video Streaming
         QGCLabel {
-           text:                qsTr("Enable")
+           text:                qsTr("Enable Stream")
            font.pointSize:      ScreenTools.smallFontPointSize
            visible:             !_camera || !_camera.autoStream
         }
@@ -102,31 +98,21 @@ Item {
         }
         //-- Video Fit
         QGCLabel {
-            text:               qsTr("Video Fit")
-            visible:            QGroundControl.videoManager.isGStreamer
+            text:               qsTr("Video Screen Fit")
+            visible:            !_camera || !_camera.autoStream
             font.pointSize:     ScreenTools.smallFontPointSize
         }
         FactComboBox {
             fact:               QGroundControl.settingsManager.videoSettings.videoFit
-            visible:            QGroundControl.videoManager.isGStreamer
+            visible:            !_camera || !_camera.autoStream
             indexModel:         false
             Layout.alignment:   Qt.AlignHCenter
-        }
-        QGCLabel {
-            text:               qsTr("File Name");
-            font.pointSize:     ScreenTools.smallFontPointSize
-            visible:            QGroundControl.videoManager.isGStreamer
-        }
-        QGCTextField {
-            id:                 videoFileName
-            Layout.fillWidth:   true
-            visible:            QGroundControl.videoManager.isGStreamer
         }
         //-- Video Recording
         QGCLabel {
            text:            _recordingVideo ? qsTr("Stop Recording") : qsTr("Record Stream")
            font.pointSize:  ScreenTools.smallFontPointSize
-           visible:         QGroundControl.videoManager.isGStreamer
+           visible:         (!_camera || !_camera.autoStream) && QGroundControl.settingsManager.videoSettings.showRecControl.rawValue
         }
         // Button to start/stop video recording
         Item {
@@ -134,7 +120,7 @@ Item {
             height:             ScreenTools.defaultFontPixelHeight * 2
             width:              height
             Layout.alignment:   Qt.AlignHCenter
-            visible:            QGroundControl.videoManager.isGStreamer
+            visible:            (!_camera || !_camera.autoStream) && QGroundControl.settingsManager.videoSettings.showRecControl.rawValue
             Rectangle {
                 id:                 recordBtnBackground
                 anchors.top:        parent.top
@@ -169,7 +155,7 @@ Item {
                         // reset blinking animation
                         recordBtnBackground.opacity = 1
                     } else {
-                        _videoReceiver.startRecording(videoFileName.text)
+                        _videoReceiver.startRecording()
                     }
                 }
             }

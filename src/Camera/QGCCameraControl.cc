@@ -1,7 +1,7 @@
 /*!
  * @file
  *   @brief Camera Controller
- *   @author Gus Grubba <gus@auterion.com>
+ *   @author Gus Grubba <mavlink@grubba.com>
  *
  */
 
@@ -189,8 +189,9 @@ QGCCameraControl::QGCCameraControl(const mavlink_camera_information_t *info, Veh
 //-----------------------------------------------------------------------------
 QGCCameraControl::~QGCCameraControl()
 {
-    delete _netManager;
-    _netManager = nullptr;
+    if(_netManager) {
+        delete _netManager;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -216,9 +217,10 @@ QGCCameraControl::_initWhenReady()
     QTimer::singleShot(2500, this, &QGCCameraControl::_requestStorageInfo);
     _captureStatusTimer.start(2750);
     emit infoChanged();
-
-    delete _netManager;
-    _netManager = nullptr;
+    if(_netManager) {
+        delete _netManager;
+        _netManager = nullptr;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -259,16 +261,6 @@ QString
 QGCCameraControl::storageFreeStr()
 {
     return QGCMapEngine::storageFreeSizeToString(static_cast<quint64>(_storageFree));
-}
-
-//-----------------------------------------------------------------------------
-QString
-QGCCameraControl::batteryRemainingStr()
-{
-    if(_batteryRemaining >= 0) {
-        return QGCMapEngine::numberToString(static_cast<quint64>(_batteryRemaining)) + " %";
-    }
-    return "";
 }
 
 //-----------------------------------------------------------------------------
@@ -1495,17 +1487,6 @@ QGCCameraControl::handleStorageInfo(const mavlink_storage_information_t& st)
     if(_storageStatus != static_cast<StorageStatus>(st.status)) {
         _storageStatus = static_cast<StorageStatus>(st.status);
         emit storageStatusChanged();
-    }
-}
-
-//-----------------------------------------------------------------------------
-void
-QGCCameraControl::handleBatteryStatus(const mavlink_battery_status_t& bs)
-{
-    qCDebug(CameraControlLog) << "handleBatteryStatus:" << bs.battery_remaining;
-    if(bs.battery_remaining >= 0 && _batteryRemaining != static_cast<int>(bs.battery_remaining)) {
-        _batteryRemaining = static_cast<int>(bs.battery_remaining);
-        emit batteryRemainingChanged();
     }
 }
 

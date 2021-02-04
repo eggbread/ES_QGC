@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -16,13 +16,7 @@ bool QGCMAVLink::isFixedWing(MAV_TYPE mavType)
 
 bool QGCMAVLink::isRover(MAV_TYPE mavType)
 {
-    switch (mavType) {
-    case MAV_TYPE_GROUND_ROVER:
-    case MAV_TYPE_SURFACE_BOAT:
-        return true;
-    default:
-        return false;
-    }
+    return mavType == MAV_TYPE_GROUND_ROVER;
 }
 
 bool QGCMAVLink::isSub(MAV_TYPE mavType)

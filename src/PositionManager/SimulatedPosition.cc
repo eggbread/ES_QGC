@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -12,30 +12,28 @@
 #include <QDate>
 
 #include "SimulatedPosition.h"
-#include "QGCApplication.h"
-#include "MultiVehicleManager.h"
+
+SimulatedPosition::simulated_motion_s SimulatedPosition::_simulated_motion[5] = {{0,250},{0,0},{0, -250},{-250, 0},{0,0}};
 
 SimulatedPosition::SimulatedPosition()
-    : QGeoPositionInfoSource(nullptr)
+    : QGeoPositionInfoSource(nullptr),
+      lat_int(47.3977420*1e7),
+      lon_int(8.5455941*1e7),
+      _step_cnt(0),
+      _simulate_motion_index(0),
+      _simulate_motion(true),
+      _rotation(0.0F)
 {
-    _updateTimer.setSingleShot(false);
+    QDateTime currentDateTime = QDateTime::currentDateTime();
 
-    // Initialize position to normal PX4 Gazebo home position
-    _lastPosition.setTimestamp(QDateTime::currentDateTime());
-    _lastPosition.setCoordinate(QGeoCoordinate(47.3977420, 8.5455941, 488));
-    _lastPosition.setAttribute(QGeoPositionInfo::Attribute::Direction, _heading);
-    _lastPosition.setAttribute(QGeoPositionInfo::Attribute::GroundSpeed, _horizontalVelocityMetersPerSec);
-    _lastPosition.setAttribute(QGeoPositionInfo::Attribute::VerticalSpeed, _verticalVelocityMetersPerSec);
+    qsrand(currentDateTime.toTime_t());
 
-    // When a vehicle shows up we switch location to the vehicle home position
-    connect(qgcApp()->toolbox()->multiVehicleManager(), &MultiVehicleManager::vehicleAdded, this, &SimulatedPosition::_vehicleAdded);
-
-    connect(&_updateTimer, &QTimer::timeout, this, &SimulatedPosition::_updatePosition);
+    connect(&update_timer, &QTimer::timeout, this, &SimulatedPosition::updatePosition);
 }
 
 QGeoPositionInfo SimulatedPosition::lastKnownPosition(bool /*fromSatellitePositioningMethodsOnly*/) const
 {
-    return _lastPosition;
+    return lastPosition;
 }
 
 SimulatedPosition::PositioningMethods SimulatedPosition::supportedPositioningMethods() const
@@ -43,14 +41,24 @@ SimulatedPosition::PositioningMethods SimulatedPosition::supportedPositioningMet
     return AllPositioningMethods;
 }
 
-void SimulatedPosition::startUpdates(void)
+int SimulatedPosition::minimumUpdateInterval() const
 {
-    _updateTimer.start(qMax(updateInterval(), minimumUpdateInterval()));
+    return 1000;
 }
 
-void SimulatedPosition::stopUpdates(void)
+void SimulatedPosition::startUpdates()
+{    
+    int interval = updateInterval();
+    if (interval < minimumUpdateInterval())
+        interval = minimumUpdateInterval();
+
+    update_timer.setSingleShot(false);
+    update_timer.start(interval);
+}
+
+void SimulatedPosition::stopUpdates()
 {
-    _updateTimer.stop();
+    update_timer.stop();
 }
 
 void SimulatedPosition::requestUpdate(int /*timeout*/)
@@ -58,17 +66,53 @@ void SimulatedPosition::requestUpdate(int /*timeout*/)
     emit updateTimeout();
 }
 
-void SimulatedPosition::_updatePosition(void)
+int SimulatedPosition::getRandomNumber(int size)
 {
-    int intervalMsecs = _updateTimer.interval();
+    if(size == 0) {
+        return 0;
+    }
 
-    QGeoCoordinate  coord =                 _lastPosition.coordinate();
-    double          horizontalDistance =    _horizontalVelocityMetersPerSec * (1000.0 / static_cast<double>(intervalMsecs));
-    double          verticalDistance =      _verticalVelocityMetersPerSec * (1000.0 / static_cast<double>(intervalMsecs));
+    int num = (qrand()%2 > 1) ? -1 : 1;
 
-    _lastPosition.setCoordinate(coord.atDistanceAndAzimuth(horizontalDistance, _heading, verticalDistance));
+    return num*qrand()%size;
+}
 
-    emit positionUpdated(_lastPosition);
+void SimulatedPosition::updatePosition()
+{
+    int32_t lat_mov = 0;
+    int32_t lon_mov = 0;
+
+    _rotation += (float) .1;
+
+    if(!(_step_cnt++%30)) {
+        _simulate_motion_index++;
+        if(_simulate_motion_index > 4) {
+            _simulate_motion_index = 0;
+        }
+    }
+
+    lat_mov = _simulated_motion[_simulate_motion_index].lat;
+    lon_mov = _simulated_motion[_simulate_motion_index].lon*sin(_rotation);
+
+    lon_int += lat_mov;
+    lat_int += lon_mov;
+
+    double latitude = ((double)  (lat_int + getRandomNumber(250)))*1e-7;
+    double longitude = ((double) (lon_int + getRandomNumber(250)))*1e-7;
+
+    QDateTime timestamp = QDateTime::currentDateTime();
+
+    QGeoCoordinate position(latitude, longitude);
+    QGeoPositionInfo info(position, timestamp);
+
+    if(lat_mov || lon_mov) {
+        info.setAttribute(QGeoPositionInfo::Attribute::Direction, 3.14/2);
+        info.setAttribute(QGeoPositionInfo::Attribute::GroundSpeed, 5);
+    }
+
+    lastPosition = info;
+
+    emit positionUpdated(info);
 }
 
 QGeoPositionInfoSource::Error SimulatedPosition::error() const
@@ -76,21 +120,4 @@ QGeoPositionInfoSource::Error SimulatedPosition::error() const
     return QGeoPositionInfoSource::NoError;
 }
 
-void SimulatedPosition::_vehicleAdded(Vehicle* vehicle)
-{
-    if (vehicle->homePosition().isValid()) {
-        _lastPosition.setCoordinate(vehicle->homePosition());
-    } else {
-        connect(vehicle, &Vehicle::homePositionChanged, this, &SimulatedPosition::_vehicleHomePositionChanged);
-    }
-}
 
-void SimulatedPosition::_vehicleHomePositionChanged(QGeoCoordinate homePosition)
-{
-    Vehicle* vehicle = qobject_cast<Vehicle*>(sender());
-
-    if (homePosition.isValid()) {
-        _lastPosition.setCoordinate(homePosition);
-        disconnect(vehicle, &Vehicle::homePositionChanged, this, &SimulatedPosition::_vehicleHomePositionChanged);
-    }
-}

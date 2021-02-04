@@ -1,13 +1,15 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
  *
  ****************************************************************************/
 
-#pragma once
+
+#ifndef QGCComboBox_H
+#define QGCComboBox_H
 
 #include <QComboBox>
 
@@ -26,3 +28,6 @@ public:
 	/// @brief Sets the current index on the combo. Signals activated, as well as currentIndexChanged.
 	void simulateUserSetCurrentIndex(int index);
 };
+
+
+#endif

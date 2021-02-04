@@ -29,16 +29,14 @@ Rectangle {
         centeredLabel:  true
         font.pointSize: ScreenTools.smallFontPointSize
 
-        QGCColoredImage {
+        Image {
             anchors.leftMargin:     _margins
             anchors.left:           parent.left
             anchors.verticalCenter: parent.verticalCenter
             source:                 "/res/gear-black.svg"
             mipmap:                 true
-            height:                 parent.height * 0.7
-            width:                  height
-            sourceSize.height:      height
-            color:                  qgcPal.text
+            width:                  parent.height -(_margins * 2)
+            sourceSize.width:       width
             fillMode:               Image.PreserveAspectFit
             visible:                pageWidgetLoader.item ? (pageWidgetLoader.item.showSettingsIcon ? pageWidgetLoader.item.showSettingsIcon : false) : false
 

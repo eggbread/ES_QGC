@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -27,7 +27,6 @@ QGCMapPolyline::QGCMapPolyline(QObject* parent)
     : QObject               (parent)
     , _dirty                (false)
     , _interactive          (false)
-    , _resetActive          (false)
 {
     _init();
 }
@@ -36,7 +35,6 @@ QGCMapPolyline::QGCMapPolyline(const QGCMapPolyline& other, QObject* parent)
     : QObject               (parent)
     , _dirty                (false)
     , _interactive          (false)
-    , _resetActive          (false)
 {
     *this = other;
 
@@ -61,9 +59,6 @@ void QGCMapPolyline::_init(void)
 {
     connect(&_polylineModel, &QmlObjectListModel::dirtyChanged, this, &QGCMapPolyline::_polylineModelDirtyChanged);
     connect(&_polylineModel, &QmlObjectListModel::countChanged, this, &QGCMapPolyline::_polylineModelCountChanged);
-
-    connect(this, &QGCMapPolyline::countChanged, this, &QGCMapPolyline::isValidChanged);
-    connect(this, &QGCMapPolyline::countChanged, this, &QGCMapPolyline::isEmptyChanged);
 }
 
 void QGCMapPolyline::clear(void)
@@ -123,8 +118,6 @@ QPointF QGCMapPolyline::_pointFFromCoord(const QGeoCoordinate& coordinate) const
 
 void QGCMapPolyline::setPath(const QList<QGeoCoordinate>& path)
 {
-    _beginResetIfNotActive();
-
     _polylinePath.clear();
     _polylineModel.clearAndDeleteContents();
     for (const QGeoCoordinate& coord: path) {
@@ -133,22 +126,20 @@ void QGCMapPolyline::setPath(const QList<QGeoCoordinate>& path)
     }
 
     setDirty(true);
-
-    _endResetIfNotActive();
+    emit pathChanged();
 }
 
 void QGCMapPolyline::setPath(const QVariantList& path)
 {
-    _beginResetIfNotActive();
-
     _polylinePath = path;
+
     _polylineModel.clearAndDeleteContents();
     for (int i=0; i<_polylinePath.count(); i++) {
         _polylineModel.append(new QGCQGeoCoordinate(_polylinePath[i].value<QGeoCoordinate>(), this));
     }
-    setDirty(true);
 
-    _endResetIfNotActive();
+    setDirty(true);
+    emit pathChanged();
 }
 
 
@@ -348,8 +339,6 @@ QList<QGeoCoordinate> QGCMapPolyline::offsetPolyline(double distance)
 
 bool QGCMapPolyline::loadKMLFile(const QString& kmlFile)
 {
-    _beginResetIfNotActive();
-
     QString errorString;
     QList<QGeoCoordinate> rgCoords;
     if (!KMLFileHelper::loadPolylineFromFile(kmlFile, rgCoords, errorString)) {
@@ -359,8 +348,6 @@ bool QGCMapPolyline::loadKMLFile(const QString& kmlFile)
 
     clear();
     appendVertices(rgCoords);
-
-    _endResetIfNotActive();
 
     return true;
 }
@@ -393,41 +380,12 @@ double QGCMapPolyline::length(void) const
 
 void QGCMapPolyline::appendVertices(const QList<QGeoCoordinate>& coordinates)
 {
-    _beginResetIfNotActive();
-
     QList<QObject*> objects;
+
     for (const QGeoCoordinate& coordinate: coordinates) {
         objects.append(new QGCQGeoCoordinate(coordinate, this));
         _polylinePath.append(QVariant::fromValue(coordinate));
     }
     _polylineModel.append(objects);
-
-    _endResetIfNotActive();
-}
-
-void QGCMapPolyline::beginReset(void)
-{
-    _resetActive = true;
-    _polylineModel.beginReset();
-}
-
-void QGCMapPolyline::endReset(void)
-{
-    _resetActive = false;
-    _polylineModel.endReset();
     emit pathChanged();
-}
-
-void QGCMapPolyline::_beginResetIfNotActive(void)
-{
-    if (!_resetActive) {
-        beginReset();
-    }
-}
-
-void QGCMapPolyline::_endResetIfNotActive(void)
-{
-    if (!_resetActive) {
-        endReset();
-    }
 }

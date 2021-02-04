@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -51,7 +51,6 @@ FixedWingLandingComplexItem::FixedWingLandingComplexItem(Vehicle* vehicle, bool 
     , _dirty                    (false)
     , _landingCoordSet          (false)
     , _ignoreRecalcSignals      (false)
-    , _loiterDragAngleOnly      (false)
     , _metaDataMap              (FactMetaData::createMapFromJsonFile(QStringLiteral(":/json/FWLandingPattern.FactMetaData.json"), this))
     , _landingDistanceFact      (settingsGroup, _metaDataMap[loiterToLandDistanceName])
     , _loiterAltitudeFact       (settingsGroup, _metaDataMap[loiterAltitudeName])
@@ -66,7 +65,6 @@ FixedWingLandingComplexItem::FixedWingLandingComplexItem(Vehicle* vehicle, bool 
     , _altitudesAreRelative     (true)
 {
     _editorQml = "qrc:/qml/FWLandingPatternEditor.qml";
-    _isIncomplete = false;
 
     connect(&_loiterAltitudeFact,       &Fact::valueChanged,                                    this, &FixedWingLandingComplexItem::_updateLoiterCoodinateAltitudeFromFact);
     connect(&_landingAltitudeFact,      &Fact::valueChanged,                                    this, &FixedWingLandingComplexItem::_updateLandingCoodinateAltitudeFromFact);
@@ -101,9 +99,6 @@ FixedWingLandingComplexItem::FixedWingLandingComplexItem(Vehicle* vehicle, bool 
 
     connect(this,                       &FixedWingLandingComplexItem::altitudesAreRelativeChanged,      this, &FixedWingLandingComplexItem::coordinateHasRelativeAltitudeChanged);
     connect(this,                       &FixedWingLandingComplexItem::altitudesAreRelativeChanged,      this, &FixedWingLandingComplexItem::exitCoordinateHasRelativeAltitudeChanged);
-
-    connect(this,                       &FixedWingLandingComplexItem::landingCoordSetChanged,           this, &FixedWingLandingComplexItem::readyForSaveStateChanged);
-    connect(this,                       &FixedWingLandingComplexItem::wizardModeChanged,                this, &FixedWingLandingComplexItem::readyForSaveStateChanged);
 
     if (vehicle->apmFirmware()) {
         // ArduPilot does not support camera commands
@@ -712,17 +707,4 @@ void FixedWingLandingComplexItem::_calcGlideSlope(void)
 void FixedWingLandingComplexItem::_signalLastSequenceNumberChanged(void)
 {
     emit lastSequenceNumberChanged(lastSequenceNumber());
-}
-
-FixedWingLandingComplexItem::ReadyForSaveState FixedWingLandingComplexItem::readyForSaveState(void) const
-{
-    return _landingCoordSet && !_wizardMode ? ReadyForSave : NotReadyForSaveData;
-}
-
-void FixedWingLandingComplexItem::setLoiterDragAngleOnly(bool loiterDragAngleOnly)
-{
-    if (loiterDragAngleOnly != _loiterDragAngleOnly) {
-        _loiterDragAngleOnly = loiterDragAngleOnly;
-        emit loiterDragAngleOnlyChanged(_loiterDragAngleOnly);
-    }
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -21,12 +21,11 @@ import QGroundControl.ScreenTools   1.0
 import QGroundControl.FlightDisplay 1.0
 import QGroundControl.FlightMap     1.0
 
-/// @brief Native QML top level window
-/// All properties defined here are visible to all QML pages.
+/// Native QML top level window
 ApplicationWindow {
     id:             mainWindow
-    minimumWidth:   ScreenTools.isMobile ? Screen.width  : Math.min(ScreenTools.defaultFontPixelWidth * 100, Screen.width)
-    minimumHeight:  ScreenTools.isMobile ? Screen.height : Math.min(ScreenTools.defaultFontPixelWidth * 50, Screen.height)
+    minimumWidth:   ScreenTools.isMobile ? Screen.width  : Math.min(215 * Screen.pixelDensity, Screen.width)
+    minimumHeight:  ScreenTools.isMobile ? Screen.height : Math.min(120 * Screen.pixelDensity, Screen.height)
     visible:        true
 
     Component.onCompleted: {
@@ -39,9 +38,6 @@ ApplicationWindow {
         }
     }
 
-    property var                _rgPreventViewSwitch:       [ false ]
-
-
     readonly property real      _topBottomMargins:          ScreenTools.defaultFontPixelHeight * 0.5
     readonly property string    _mainToolbar:               QGroundControl.corePlugin.options.mainToolbarUrl
     readonly property string    _planToolbar:               QGroundControl.corePlugin.options.planToolbarUrl
@@ -49,12 +45,9 @@ ApplicationWindow {
     //-------------------------------------------------------------------------
     //-- Global Scope Variables
 
-    /// Current active Vehicle
     property var                activeVehicle:              QGroundControl.multiVehicleManager.activeVehicle
-    /// Indicates communication with vehicle is list (no heartbeats)
     property bool               communicationLost:          activeVehicle ? activeVehicle.connectionLost : false
     property string             formatedMessage:            activeVehicle ? activeVehicle.formatedMessage : ""
-    /// Indicates usable height between toolbar and footer
     property real               availableHeight:            mainWindow.height - mainWindow.header.height - mainWindow.footer.height
 
     property var                currentPlanMissionItem:     planMasterControllerPlan ? planMasterControllerPlan.missionController.currentPlanViewItem : null
@@ -66,7 +59,6 @@ ApplicationWindow {
     readonly property real      defaultTextHeight:          ScreenTools.defaultFontPixelHeight
     readonly property real      defaultTextWidth:           ScreenTools.defaultFontPixelWidth
 
-    /// Default color palette used throughout the UI
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
     //-------------------------------------------------------------------------
@@ -79,25 +71,6 @@ ApplicationWindow {
 
     //-------------------------------------------------------------------------
     //-- Global Scope Functions
-
-    /// Prevent view switching
-    function pushPreventViewSwitch() {
-        _rgPreventViewSwitch.push(true)
-    }
-
-    /// Allow view switching
-    function popPreventViewSwitch() {
-        if (_rgPreventViewSwitch.length == 1) {
-            console.warn("mainWindow.popPreventViewSwitch called when nothing pushed")
-            return
-        }
-        _rgPreventViewSwitch.pop()
-    }
-
-    /// @return true: View switches are not currently allowed
-    function preventViewSwitch() {
-        return _rgPreventViewSwitch[_rgPreventViewSwitch.length - 1]
-    }
 
     function viewSwitch(isPlanView) {
         settingsWindow.visible  = false
@@ -113,10 +86,6 @@ ApplicationWindow {
     }
 
     function showFlyView() {
-        if (!flightView.visible) {
-            flightView.showPreflightChecklistIfNeeded()
-        }
-
         viewSwitch(false)
         flightView.visible = true
     }
@@ -153,11 +122,6 @@ ApplicationWindow {
         simpleMessageDialog.open()
     }
 
-    /// Saves main window position and size
-    MainWindowSavedState {
-        window: mainWindow
-    }
-
     MessageDialog {
         id:                 simpleMessageDialog
         standardButtons:    StandardButton.Ok
@@ -178,21 +142,13 @@ ApplicationWindow {
     readonly property int showDialogDefaultWidth:   40  ///< Use for default dialog width
 
     function showComponentDialog(component, title, charWidth, buttons) {
-        if (mainWindowDialog.visible) {
-            console.warn(("showComponentDialog called while dialog is already visible"))
-            return
-        }
         var dialogWidth = charWidth === showDialogFullWidth ? mainWindow.width : ScreenTools.defaultFontPixelWidth * charWidth
         mainWindowDialog.width = dialogWidth
         mainWindowDialog.dialogComponent = component
         mainWindowDialog.dialogTitle = title
         mainWindowDialog.dialogButtons = buttons
-        mainWindow.pushPreventViewSwitch()
         mainWindowDialog.open()
-        if (buttons & StandardButton.Cancel || buttons & StandardButton.Close || buttons & StandardButton.Discard || buttons & StandardButton.Abort || buttons & StandardButton.Ignore) {
-            mainWindowDialog.closePolicy = Popup.NoAutoClose;
-            mainWindowDialog.interactive = false;
-        } else {
+        if(buttons & StandardButton.Cancel || buttons & StandardButton.Close || buttons & StandardButton.Discard || buttons & StandardButton.Abort || buttons & StandardButton.Ignore) {
             mainWindowDialog.closePolicy = Popup.CloseOnEscape | Popup.CloseOnPressOutside;
             mainWindowDialog.interactive = true;
         }
@@ -221,8 +177,6 @@ ApplicationWindow {
             dlgLoader.source = "QGCViewDialogContainer.qml"
         }
         onClosed: {
-            //console.log("View switch ok")
-            mainWindow.popPreventViewSwitch()
             dlgLoader.source = ""
         }
     }
@@ -231,56 +185,8 @@ ApplicationWindow {
 
     function finishCloseProcess() {
         QGroundControl.linkManager.shutdown()
-        QGroundControl.videoManager.stopVideo();
         _forceClose = true
         mainWindow.close()
-    }
-
-    // On attempting an application close we check for:
-    //  Unsaved missions - then
-    //  Pending parameter writes - then
-    //  Active connections
-    onClosing: {
-        if (!_forceClose) {
-            unsavedMissionCloseDialog.check()
-            close.accepted = false
-        }
-    }
-
-    MessageDialog {
-        id:                 unsavedMissionCloseDialog
-        title:              qsTr("%1 close").arg(QGroundControl.appName)
-        text:               qsTr("You have a mission edit in progress which has not been saved/sent. If you close you will lose changes. Are you sure you want to close?")
-        standardButtons:    StandardButton.Yes | StandardButton.No
-        modality:           Qt.ApplicationModal
-        visible:            false
-        onYes:              pendingParameterWritesCloseDialog.check()
-        function check() {
-            if (planMasterControllerPlan && planMasterControllerPlan.dirty) {
-                unsavedMissionCloseDialog.open()
-            } else {
-                pendingParameterWritesCloseDialog.check()
-            }
-        }
-    }
-
-    MessageDialog {
-        id:                 pendingParameterWritesCloseDialog
-        title:              qsTr("%1 close").arg(QGroundControl.appName)
-        text:               qsTr("You have pending parameter updates to a vehicle. If you close you will lose changes. Are you sure you want to close?")
-        standardButtons:    StandardButton.Yes | StandardButton.No
-        modality:           Qt.ApplicationModal
-        visible:            false
-        onYes:              activeConnectionsCloseDialog.check()
-        function check() {
-            for (var index=0; index<QGroundControl.multiVehicleManager.vehicles.count; index++) {
-                if (QGroundControl.multiVehicleManager.vehicles.get(index).parameterManager.pendingWrites) {
-                    pendingParameterWritesCloseDialog.open()
-                    return
-                }
-            }
-            activeConnectionsCloseDialog.check()
-        }
     }
 
     MessageDialog {
@@ -301,14 +207,42 @@ ApplicationWindow {
     }
 
     //-------------------------------------------------------------------------
-    /// Main, full window background (Fly View)
+    //-- Check for unsaved missions
+
+    onClosing: {
+        // Check first for unsaved missions and active connections
+        if (!_forceClose) {
+            unsavedMissionCloseDialog.check()
+            close.accepted = false
+        }
+    }
+
+    MessageDialog {
+        id:                 unsavedMissionCloseDialog
+        title:              qsTr("%1 close").arg(QGroundControl.appName)
+        text:               qsTr("You have a mission edit in progress which has not been saved/sent. If you close you will lose changes. Are you sure you want to close?")
+        standardButtons:    StandardButton.Yes | StandardButton.No
+        modality:           Qt.ApplicationModal
+        visible:            false
+        onYes:              activeConnectionsCloseDialog.check()
+        function check() {
+            if (planMasterControllerPlan && planMasterControllerPlan.dirty) {
+                unsavedMissionCloseDialog.open()
+            } else {
+                activeConnectionsCloseDialog.check()
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    //-- Main, full window background (Fly View)
     background: Item {
         id:             rootBackground
         anchors.fill:   parent
     }
 
     //-------------------------------------------------------------------------
-    /// Toolbar
+    //-- Toolbar
     header: ToolBar {
         height:         ScreenTools.toolbarHeight
         visible:        !QGroundControl.videoManager.fullScreen
@@ -339,7 +273,7 @@ ApplicationWindow {
     }
 
     //-------------------------------------------------------------------------
-    /// Fly View
+    //-- Fly View
     FlightDisplayView {
         id:             flightView
         anchors.fill:   parent
@@ -353,7 +287,7 @@ ApplicationWindow {
     }
 
     //-------------------------------------------------------------------------
-    /// Plan View
+    //-- Plan View
     Loader {
         id:             planViewLoader
         anchors.fill:   parent
@@ -362,7 +296,7 @@ ApplicationWindow {
     }
 
     //-------------------------------------------------------------------------
-    /// Settings
+    //-- Settings
     Loader {
         id:             settingsWindow
         anchors.fill:   parent
@@ -371,7 +305,7 @@ ApplicationWindow {
     }
 
     //-------------------------------------------------------------------------
-    /// Setup
+    //-- Setup
     Loader {
         id:             setupWindow
         anchors.fill:   parent
@@ -380,7 +314,7 @@ ApplicationWindow {
     }
 
     //-------------------------------------------------------------------------
-    /// Analyze
+    //-- Analyze
     Loader {
         id:             analyzeWindow
         anchors.fill:   parent
@@ -389,7 +323,7 @@ ApplicationWindow {
     }
 
     //-------------------------------------------------------------------------
-    //   @brief Loader helper for any child, no matter how deep, to display elements
+    //-- Loader helper for any child, no matter how deep, to display elements
     //   on top of the main window.
     //   This is DEPRECATED. Use Popup instead.
     Loader {
@@ -507,7 +441,7 @@ ApplicationWindow {
     }
 
     //-------------------------------------------------------------------------
-    //-- System Messages
+    //-- Warning Messages
 
     property var    _messageQueue:      []
     property string _systemMessage:     ""
@@ -634,6 +568,122 @@ ApplicationWindow {
         }
     }
 
+    property var    _warningQueue:      []
+    property string _systemWarning:     ""
+
+    function showWarningMessage(message) {
+        warningMessageArea.close()
+        if(warningMessageArea.visible || QGroundControl.videoManager.fullScreen) {
+            _warningQueue.push(message)
+        } else {
+            _systemWarning = message
+            warningMessageArea.open()
+        }
+    }
+
+    Popup {
+        id:                 warningMessageArea
+        y:                  ScreenTools.defaultFontPixelHeight
+        x:                  Math.round((mainWindow.width - width) * 0.5)
+        width:              mainWindow.width  * 0.55
+        height:             ScreenTools.defaultFontPixelHeight * 6
+        modal:              false
+        focus:              true
+        closePolicy:        Popup.CloseOnEscape
+
+        background: Rectangle {
+            anchors.fill:   parent
+            color:          qgcPal.warningBackground
+            radius:         ScreenTools.defaultFontPixelHeight * 0.5
+//            border.color:   qgcPal.warningBorder
+//            border.width:   2
+        }
+
+        onOpened: {
+            warningMessageText.text = mainWindow._systemWarning
+        }
+
+        onClosed: {
+            //-- Are there messages in the waiting queue?
+            if(mainWindow._warningQueue.length) {
+                mainWindow._systemWarning = ""
+                //-- Show all messages in queue
+                for (var i = 0; i < mainWindow._warningQueue.length; i++) {
+                    var text = mainWindow._warningQueue[i]
+                    if(i) mainWindow._systemWarning += "<br>"
+                    mainWindow._systemWarning += text
+                }
+                //-- Clear it
+                mainWindow._warningQueue = []
+                warningMessageArea.open()
+            } else {
+                mainWindow._systemWarning = ""
+            }
+        }
+
+        Flickable {
+            id:                 warningMessageFlick
+            anchors.margins:    ScreenTools.defaultFontPixelHeight * 0.5
+            anchors.fill:       parent
+            contentHeight:      warningMessageText.height
+            contentWidth:       warningMessageText.width
+            boundsBehavior:     Flickable.StopAtBounds
+            pixelAligned:       true
+            clip:               true
+            TextEdit {
+                id:             warningMessageText
+                width:          warningMessageArea.width - warningMessageClose.width - (ScreenTools.defaultFontPixelHeight * 2)
+                anchors.centerIn: parent
+                readOnly:       true
+                textFormat:     TextEdit.RichText
+                font.pointSize: ScreenTools.defaultFontPointSize
+                font.family:    ScreenTools.demiboldFontFamily
+                wrapMode:       TextEdit.WordWrap
+                color:          qgcPal.warningText
+            }
+        }
+
+        //-- Dismiss Critical Message
+        QGCColoredImage {
+            id:                 warningMessageClose
+            anchors.margins:    ScreenTools.defaultFontPixelHeight * 0.5
+            anchors.top:        parent.top
+            anchors.right:      parent.right
+            width:              ScreenTools.isMobile ? ScreenTools.defaultFontPixelHeight * 1.5 : ScreenTools.defaultFontPixelHeight
+            height:             width
+            sourceSize.height:  width
+            source:             "/res/XDelete.svg"
+            fillMode:           Image.PreserveAspectFit
+            color:              qgcPal.warningText
+            MouseArea {
+                anchors.fill:       parent
+                anchors.margins:    -ScreenTools.defaultFontPixelHeight
+                onClicked: {
+                    warningMessageArea.close()
+                }
+            }
+        }
+
+        //-- More text below indicator
+        QGCColoredImage {
+            anchors.margins:    ScreenTools.defaultFontPixelHeight * 0.5
+            anchors.bottom:     parent.bottom
+            anchors.right:      parent.right
+            width:              ScreenTools.isMobile ? ScreenTools.defaultFontPixelHeight * 1.5 : ScreenTools.defaultFontPixelHeight
+            height:             width
+            sourceSize.height:  width
+            source:             "/res/ArrowDown.svg"
+            fillMode:           Image.PreserveAspectFit
+            visible:            warningMessageText.lineCount > 5
+            color:              qgcPal.warningText
+            MouseArea {
+                anchors.fill:   parent
+                onClicked: {
+                    warningMessageFlick.flick(0,-500)
+                }
+            }
+        }
+    }
     //-------------------------------------------------------------------------
     //-- Indicator Popups
 
@@ -641,12 +691,6 @@ ApplicationWindow {
         indicatorDropdown.currentIndicator = dropItem
         indicatorDropdown.currentItem = item
         indicatorDropdown.open()
-    }
-
-    function hidePopUp() {
-        indicatorDropdown.close()
-        indicatorDropdown.currentItem = null
-        indicatorDropdown.currentIndicator = null
     }
 
     Popup {

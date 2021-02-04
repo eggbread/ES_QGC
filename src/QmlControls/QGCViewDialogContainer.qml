@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -112,14 +112,20 @@ Item {
                 id:                 _rejectButton
                 anchors.right:      _acceptButton.visible ?  _acceptButton.left : parent.right
                 anchors.bottom:     parent.bottom
-                onClicked:          _dialogComponentLoader.item.reject()
+                onClicked: {
+                    _dialogComponentLoader.item.reject()
+                    mainWindowDialog.close()
+                }
             }
             QGCButton {
                 id:                 _acceptButton
                 anchors.right:      parent.right
                 anchors.bottom:     parent.bottom
                 primary:            true
-                onClicked:          _dialogComponentLoader.item.accept()
+                onClicked: {
+                    _dialogComponentLoader.item.accept()
+                    mainWindowDialog.close()
+                }
             }
         }
         Item {

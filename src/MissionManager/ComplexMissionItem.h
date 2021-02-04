@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -24,10 +24,12 @@ public:
 
     const ComplexMissionItem& operator=(const ComplexMissionItem& other);
 
-    Q_PROPERTY(double       complexDistance     READ complexDistance    NOTIFY complexDistanceChanged)
-    Q_PROPERTY(bool         presetsSupported    READ presetsSupported   CONSTANT)
-    Q_PROPERTY(QStringList  presetNames         READ presetNames        NOTIFY presetNamesChanged)
-    Q_PROPERTY(bool         isIncomplete        READ isIncomplete       NOTIFY isIncompleteChanged)
+    Q_PROPERTY(double       complexDistance     READ complexDistance                            NOTIFY complexDistanceChanged)
+    Q_PROPERTY(bool         presetsSupported    READ presetsSupported                           CONSTANT)
+    Q_PROPERTY(QStringList  presetNames         READ presetNames                                NOTIFY presetNamesChanged)
+    Q_PROPERTY(QString      currentPreset       READ currentPreset                              NOTIFY currentPresetChanged)
+    Q_PROPERTY(bool         cameraInPreset      READ cameraInPreset     WRITE setCameraInPreset NOTIFY cameraInPresetChanged)
+    Q_PROPERTY(bool         builtInPreset       READ builtInPreset      WRITE setBuiltInPreset  NOTIFY builtInPresetChanged)
 
     /// @return The distance covered the complex mission item in meters.
     /// Signals complexDistanceChanged
@@ -48,8 +50,8 @@ public:
     ///     @param name User visible name for preset. Will replace existing preset if already exists.
     Q_INVOKABLE virtual void savePreset(const QString& name);
 
-     Q_INVOKABLE void deletePreset(const QString& name);
-
+    Q_INVOKABLE void clearCurrentPreset(void);
+    Q_INVOKABLE void deleteCurrentPreset(void);
 
     /// Get the point of complex mission item furthest away from a coordinate
     ///     @param other QGeoCoordinate to which distance is calculated
@@ -65,8 +67,12 @@ public:
     ///     Empty string signals no support for presets.
     virtual QString presetsSettingsGroup(void) { return QString(); }
 
-    bool presetsSupported   (void) { return !presetsSettingsGroup().isEmpty(); }
-    bool isIncomplete       (void) const { return _isIncomplete; }
+    bool    presetsSupported    (void) { return !presetsSettingsGroup().isEmpty(); }
+    QString currentPreset       (void) const { return _currentPreset; }
+    bool    cameraInPreset      (void) const { return _cameraInPreset; }
+    bool    builtInPreset       (void) const { return _builtInPreset; }
+    void    setCameraInPreset   (bool cameraInPreset);
+    void    setBuiltInPreset    (bool builtInPreset);
 
     /// This mission item attribute specifies the type of the complex item.
     static const char* jsonComplexItemTypeKey;
@@ -76,17 +82,28 @@ signals:
     void boundingCubeChanged        (void);
     void greatestDistanceToChanged  (void);
     void presetNamesChanged         (void);
-    void isIncompleteChanged        (void);
+    void currentPresetChanged       (QString currentPreset);
+    void cameraInPresetChanged      (bool cameraInPreset);
+    void builtInPresetChanged       (bool builtInPreset);
 
 protected:
+    void        _saveItem       (QJsonObject& saveObject);
+    void        _loadItem       (const QJsonObject& saveObject);
     void        _savePresetJson (const QString& name, QJsonObject& presetObject);
     QJsonObject _loadPresetJson (const QString& name);
 
-    bool _isIncomplete = true;
 
     QMap<QString, FactMetaData*> _metaDataMap;
 
+    QString         _currentPreset;
+    SettingsFact    _saveCameraInPresetFact;
+    bool            _cameraInPreset;
+    bool            _builtInPreset;
+
     static const char* _presetSettingsKey;
+    static const char* _presetNameKey;
+    static const char* _saveCameraInPresetKey;
+    static const char* _builtInPresetKey;
 };
 
 #endif

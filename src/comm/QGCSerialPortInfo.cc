@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -295,16 +295,9 @@ QString QGCSerialPortInfo::_boardTypeToString(BoardType_t boardType)
 QList<QGCSerialPortInfo> QGCSerialPortInfo::availablePorts(void)
 {
     QList<QGCSerialPortInfo>    list;
-    QStringList                 seenSerialNumbers;
 
     for(QSerialPortInfo portInfo: QSerialPortInfo::availablePorts()) {
         if (!isSystemPort(&portInfo)) {
-            if (seenSerialNumbers.contains(portInfo.serialNumber())) {
-                // Some boards are a composite USB device, with the first port being mavlink and the second something else
-                qCDebug(QGCSerialPortInfoLog) << "Skipping secondary port on same device" << portInfo.portName() << portInfo.serialNumber();
-                continue;
-            }
-            seenSerialNumbers.append(portInfo.serialNumber());
             list << *((QGCSerialPortInfo*)&portInfo);
         }
     }

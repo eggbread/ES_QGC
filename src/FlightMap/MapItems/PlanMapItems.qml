@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -37,6 +37,7 @@ Item {
 
     // Add the mission item visuals to the map
     Repeater {
+        id: repeater
         model: _isActiveVehicle && largeMapView ? _missionController.visualItems : 0
 
         delegate: MissionItemMapVisual {
@@ -61,8 +62,8 @@ Item {
         id: missionLineViewComponent
 
         MapPolyline {
-            line.width: 3
-            line.color: "#be781c"                           // Hack, can't get palette to work in here
+            line.width: _vehicle.active ? 5:1
+            line.color: Qt.rgba(255,Math.random(),0,1) //"#be781c"                           // Hack, can't get palette to work in here
             z:          QGroundControl.zOrderWaypointLines
             path:       _missionController.waypointPath
         }

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -78,11 +78,6 @@ SurveyComplexItem::SurveyComplexItem(Vehicle* vehicle, bool flyView, const QStri
         _turnAroundDistanceFact.setRawValue(10);
     }
 
-    if (_vehicle && !(_vehicle->fixedWing() || _vehicle->vtol())) {
-        // Only fixed wing flight paths support alternate transects
-        _flyAlternateTransectsFact.setRawValue(false);
-    }
-
     // We override the altitude to the mission default
     if (_cameraCalc.isManualCamera() || !_cameraCalc.valueSetIsDistance()->rawValue().toBool()) {
         _cameraCalc.distanceToSurface()->setRawValue(qgcApp()->toolbox()->settingsManager()->appSettings()->defaultMissionItemAltitude()->rawValue());
@@ -146,9 +141,7 @@ void SurveyComplexItem::loadPreset(const QString& name)
     QString errorString;
 
     QJsonObject presetObject = _loadPresetJson(name);
-    if (!_loadV4V5(presetObject, 0, errorString, 5, true /* forPresets */)) {
-        qgcApp()->showMessage(QStringLiteral("Internal Error: Preset load failed. Name: %1 Error: %2").arg(name).arg(errorString));
-    }
+    _loadV4V5(presetObject, 0, errorString, 5, true /* forPresets */);
     _rebuildTransects();
 }
 
@@ -841,12 +834,6 @@ void SurveyComplexItem::_rebuildTransectsPhase1WorkerSinglePolygon(bool refly)
 
     double gridAngle = _gridAngleFact.rawValue().toDouble();
     double gridSpacing = _cameraCalc.adjustedFootprintSide()->rawValue().toDouble();
-    if (gridSpacing < 0.5) {
-        // We can't let gridSpacing get too small otherwise we will end up with too many transects.
-        // So we limit to 0.5 meter spacing as min and set to huge value which will cause a single
-        // transect to be added.
-        gridSpacing = 100000;
-    }
 
     gridAngle = _clampGridAngle90(gridAngle);
     gridAngle += refly ? 90 : 0;
@@ -1509,9 +1496,9 @@ void SurveyComplexItem::applyNewAltitude(double newAltitude)
     _cameraCalc.setDistanceToSurfaceRelative(true);
 }
 
-SurveyComplexItem::ReadyForSaveState SurveyComplexItem::readyForSaveState(void) const
+bool SurveyComplexItem::readyForSave(void) const
 {
-    return TransectStyleComplexItem::readyForSaveState();
+    return TransectStyleComplexItem::readyForSave();
 }
 
 void SurveyComplexItem::appendMissionItems(QList<MissionItem*>& items, QObject* missionItemParent)

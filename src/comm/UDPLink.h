@@ -1,11 +1,19 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2018 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
  *
  ****************************************************************************/
+
+
+/*!
+ * @file
+ *   @brief UDP connection (server) for unmanned vehicles
+ *   @author Lorenz Meier <mavteam@student.ethz.ch>
+ *
+ */
 
 #pragma once
 
@@ -14,7 +22,7 @@
 #include <QMap>
 #include <QMutex>
 #include <QUdpSocket>
-#include <QMutex>
+#include <QMutexLocker>
 #include <QQueue>
 #include <QByteArray>
 
@@ -161,6 +169,8 @@ public:
     bool    connect                 (void);
     bool    disconnect              (void);
 
+    QString getLastConnectedIP      (void);
+
 public slots:
     void    readBytes               ();
 
@@ -187,12 +197,13 @@ private:
     DNSServiceRef  _dnssServiceRef;
 #endif
 
+    QHostAddress            _lastConnectedTargetIP;
     bool                    _running;
     QUdpSocket*             _socket;
     UDPConfiguration*       _udpConfig;
     bool                    _connectState;
     QList<UDPCLient*>       _sessionTargets;
-    QMutex                  _sessionTargetsMutex;
-    QList<QHostAddress>     _localAddresses;
+    QList<QHostAddress>     _localAddress;
+
 };
 

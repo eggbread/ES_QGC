@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
  *
  * QGroundControl is licensed according to the terms in the file
  * COPYING.md in the root of the source code directory.
@@ -39,41 +39,22 @@ DECLARE_SETTINGGROUP(App, "")
     qmlRegisterUncreatableType<AppSettings>("QGroundControl.SettingsManager", 1, 0, "AppSettings", "Reference only");
     QGCPalette::setGlobalTheme(indoorPalette()->rawValue().toBool() ? QGCPalette::Dark : QGCPalette::Light);
 
-    // virtualJoystickCentralized -> virtualJoystickAutoCenterThrottle
-    QSettings settings;
-    settings.beginGroup(_settingsGroup);
-    QString deprecatedVirtualJoystickCentralizedKey("virtualJoystickCentralized");
-    if (settings.contains(deprecatedVirtualJoystickCentralizedKey)) {
-        settings.setValue(virtualJoystickAutoCenterThrottleName, settings.value(deprecatedVirtualJoystickCentralizedKey));
-        settings.remove(deprecatedVirtualJoystickCentralizedKey);
-    }
-
     // Instantiate savePath so we can check for override and setup default path if needed
 
     SettingsFact* savePathFact = qobject_cast<SettingsFact*>(savePath());
     QString appName = qgcApp()->applicationName();
+    if (savePathFact->rawValue().toString().isEmpty() && _nameToMetaDataMap[savePathName]->rawDefaultValue().toString().isEmpty()) {
 #ifdef __mobile__
-    // Mobile builds always use the runtime generated location for savePath.
-    bool userHasModifiedSavePath = false;
+#ifdef __ios__
+        QDir rootDir = QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
 #else
-    bool userHasModifiedSavePath = !savePathFact->rawValue().toString().isEmpty() || !_nameToMetaDataMap[savePathName]->rawDefaultValue().toString().isEmpty();
-#endif
-
-    if (!userHasModifiedSavePath) {
-#ifdef __mobile__
-    #ifdef __ios__
-        // This will expose the directories directly to the File iOs app
-        QDir rootDir = QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
-        savePathFact->setRawValue(rootDir.absolutePath());
-    #else
         QDir rootDir = QDir(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation));
-        savePathFact->setRawValue(rootDir.filePath(appName));
-    #endif
+#endif
         savePathFact->setVisible(false);
 #else
         QDir rootDir = QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
-        savePathFact->setRawValue(rootDir.filePath(appName));
 #endif
+        savePathFact->setRawValue(rootDir.filePath(appName));
     }
 
     connect(savePathFact, &Fact::rawValueChanged, this, &AppSettings::savePathsChanged);
@@ -98,13 +79,12 @@ DECLARE_SETTINGSFACT(AppSettings, telemetrySaveNotArmed)
 DECLARE_SETTINGSFACT(AppSettings, audioMuted)
 DECLARE_SETTINGSFACT(AppSettings, checkInternet)
 DECLARE_SETTINGSFACT(AppSettings, virtualJoystick)
-DECLARE_SETTINGSFACT(AppSettings, virtualJoystickAutoCenterThrottle)
+DECLARE_SETTINGSFACT(AppSettings, virtualJoystickCentralized)
 DECLARE_SETTINGSFACT(AppSettings, appFontPointSize)
 DECLARE_SETTINGSFACT(AppSettings, showLargeCompass)
 DECLARE_SETTINGSFACT(AppSettings, savePath)
 DECLARE_SETTINGSFACT(AppSettings, autoLoadMissions)
 DECLARE_SETTINGSFACT(AppSettings, useChecklist)
-DECLARE_SETTINGSFACT(AppSettings, enforceChecklist)
 DECLARE_SETTINGSFACT(AppSettings, mapboxToken)
 DECLARE_SETTINGSFACT(AppSettings, esriToken)
 DECLARE_SETTINGSFACT(AppSettings, defaultFirmwareType)
