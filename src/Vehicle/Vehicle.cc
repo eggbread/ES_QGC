@@ -45,6 +45,8 @@
 #include "VehicleObjectAvoidance.h"
 #include "TrajectoryPoints.h"
 #include "QGCGeo.h"
+#include "stdlib.h"
+#include "bioair.h"
 
 #if defined(QGC_AIRMAP_ENABLED)
 #include "AirspaceVehicleManager.h"
@@ -218,6 +220,13 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _clockFactGroup(this)
     , _distanceSensorFactGroup(this)
     , _estimatorStatusFactGroup(this)
+    , _messageCountTimer(this)
+    , _rssiTimer(this)
+    , _messagesIn2sec(0)
+    , _prevMessagesReceived(0)
+    , _csvLogTimer(this)
+    , _sensorRange(150)
+    , _showTrajectory(false)
 {
     connect(_joystickManager, &JoystickManager::activeJoystickChanged, this, &Vehicle::_loadSettings);
     connect(qgcApp()->toolbox()->multiVehicleManager(), &MultiVehicleManager::activeVehicleAvailableChanged, this, &Vehicle::_loadSettings);
@@ -249,6 +258,8 @@ Vehicle::Vehicle(LinkInterface*             link,
     _prearmErrorTimer.setInterval(_prearmErrorTimeoutMSecs);
     _prearmErrorTimer.setSingleShot(true);
 
+    _rssiTimer.setInterval(_rssiTimeoutMSecs);
+    connect(&_rssiTimer, &QTimer::timeout, this, &Vehicle::_updateRSSI);
     // Send MAV_CMD ack timer
     _mavCommandAckTimer.setSingleShot(true);
     _mavCommandAckTimer.setInterval(_highLatencyLink ? _mavCommandAckTimeoutMSecsHighLatency : _mavCommandAckTimeoutMSecs);
@@ -297,6 +308,9 @@ Vehicle::Vehicle(LinkInterface*             link,
     connect(&_csvLogTimer, &QTimer::timeout, this, &Vehicle::_writeCsvLine);
     _csvLogTimer.start(1000);
     _lastBatteryAnnouncement.start();
+
+    // SwarmSense
+    _rssiTimer.start();
 }
 
 // Disconnected Vehicle for offline editing
@@ -1483,6 +1497,11 @@ void Vehicle::_handleCommandLong(mavlink_message_t& message)
             }
         }
         break;
+    case 40200:
+        if (int(cmd.param1) != _bioairNodeState){
+            setBioairNodeState(cmd.param1);
+        }
+        qDebug() <<"Message"<< cmd.param1;
     }
 #endif
 }
@@ -2399,6 +2418,202 @@ void Vehicle::setArmed(bool armed)
                    true,    // show error if fails
                    armed ? 1.0f : 0.0f);
 }
+
+//SwarmSense
+void Vehicle::setSensorRange(int sensorRange)
+{
+    _sensorRange = sensorRange;
+    emit sensorRangeChanged(sensorRange);
+
+}
+
+void Vehicle::setShowTrajectory(bool showTrajectory)
+{
+//    char* comm = "ls -al";
+//    int result = system(comm);
+//    qWarning()<<result;
+//    _rssiTimer.start();
+    _showTrajectory = showTrajectory;
+    emit showTrajectoryChanged(showTrajectory);
+}
+
+void Vehicle::setRtlOn(bool rtlOn)
+{
+    _rtlOn = rtlOn;
+    emit rtlOnChanged(_rtlOn);
+
+    qDebug() << "rtl is " << _rtlOn;
+}
+
+void Vehicle::setBioairNodeState(int nodeState)
+{
+    _bioairNodeState = nodeState;
+    emit bioairNodeStateChanged(_bioairNodeState);
+}
+enum {
+    BACKBONE,
+    DESTINATION,
+    EXTRA,
+    FREE,
+    ORIGIN,
+    ORPHAN,
+    REINFORCE,
+    TIP,
+    UNKNOWN
+};
+QString Vehicle::getBioairNodeState() {
+    switch (_bioairNodeState) {
+        case BACKBONE:
+            return "BackBone";
+        case DESTINATION:
+            return "Destination";
+        case EXTRA:
+            return "Extra";
+        case FREE:
+            return "Free";
+        case ORIGIN:
+            return "Origin";
+        case ORPHAN:
+            return "Orphan";
+        case REINFORCE:
+            return "Reinforce";
+        case TIP:
+            return "Tip";
+    }
+    return "Unknown";
+}
+
+//enum {
+//    BACKBONE,
+//    DESTINATION,
+//    EXTRA,
+//    FREE,
+//    ORIGIN,
+//    ORPHAN,
+//    REINFORCE,
+//    TIP,
+//    UNKNOWN
+//};
+//int  bioairNodeState(int nodeState) {
+//    switch (nodeState) {
+//        case BACKBONE:
+//            return "BackBone";
+//        case DESTINATION:
+//            return "Destination";
+//        case EXTRA:
+//            return "Extra";
+//        case FREE:
+//            return "Free";
+//        case ORIGIN:
+//            return "Origin";
+//        case ORPHAN:
+//            return "Orphan";
+//        case REINFORCE:
+//            return "Reinforce";
+//        case TIP:
+//            return "Tip";
+//    }
+//    return "Unknown";
+//}
+
+void Vehicle::setBioairOn(bool bioairOn)
+{
+    if(!_rtlOn){
+        sendMavCommand(_defaultComponentId,
+                    MAV_CMD_SET_BIOAIR,
+                    true,
+                    bioairOn ? 1.0f : 0.0f);
+    }
+
+    _bioairOn = bioairOn;
+    emit bioairOnChanged(_bioairOn);
+
+    qDebug() << "BioAiR On : " << _bioairOn;
+}
+
+void Vehicle::setRssi(QVariantList rssi)
+{
+    _rssi = rssi;
+}
+
+void Vehicle::setStreamingOn(int streamingOn)
+{
+    if(!_rtlOn){
+        if(streamingOn == 0){ // both
+            _videoReceiver->start();
+
+            sendMavCommand(_defaultComponentId,
+                           MAV_CMD_SET_STREAMING,
+                           true,
+                           1.0f,
+                           _port, // PORT
+                           0.0f, // MODE - -1 : Nothing, 0 : both, 1 : rgb only, 2: depth only
+                           0.0f); // IS_USING_PELEENET
+        }else if(streamingOn == 1){ // rgb
+            _videoReceiver->start();
+
+            sendMavCommand(_defaultComponentId,
+                           MAV_CMD_SET_STREAMING,
+                           true,
+                           1.0f,
+                           _port, // PORT
+                           1.0f, // MODE
+                           0.0f); // IS_USING_PELEENET
+        }else if(streamingOn == 2){ // depth
+            _videoReceiver->start();
+
+            sendMavCommand(_defaultComponentId,
+                           MAV_CMD_SET_STREAMING,
+                           true,
+                           1.0f,
+                           _port, // PORT
+                           2.0f, // MODE
+                           0.0f); // IS_USING_PELEENET
+        } else if(streamingOn == -1){ // nothing
+            _videoReceiver->stop();
+            sendMavCommand(_defaultComponentId,
+                           MAV_CMD_SET_STREAMING,
+                           true,
+                           0.0f,
+                           0.0f, // PORT
+                           -1.0f, // MODE
+                           1.0f); // IS_USING_PELEENET
+        }
+    }else{ // for RTL
+        _videoReceiver->stop();
+    }
+
+    _streamingOn = streamingOn;
+
+    emit streamingOnChanged(_streamingOn);
+
+    qDebug() << "streaming On : " << _streamingOn;
+}
+
+void Vehicle::setAiOn(bool aiOn)
+{
+    if(!_rtlOn){
+        sendMavCommand(_defaultComponentId,
+                       MAV_CMD_SET_AI,
+                       true,
+                       aiOn ? 1.0f : 0.0f);
+    }
+
+    _aiOn = aiOn;
+    emit aiOnChanged(_aiOn);
+
+    qDebug() << "ai On : " << _aiOn;
+}
+
+void Vehicle::setMainIsMap(bool mainIsMap)
+{
+    _mainIsMap = mainIsMap;
+    emit mainIsMapChanged(_mainIsMap);
+
+//    qDebug() << "main is " << (_mainIsMap ? "Map" : "Video");
+
+}
+
 
 bool Vehicle::flightModeSetAvailable()
 {
@@ -3958,6 +4173,32 @@ void Vehicle::_updateDistanceToGCS()
     } else {
         _distanceToGCSFact.setRawValue(qQNaN());
     }
+}
+
+void Vehicle::_updateRSSI()
+{
+//    QProcess* process = new QProcess();
+//    QStringList args;
+//    args << "-c" << "iw dev wlx";
+//    process->start("ifconfig", args);
+//    process->waitForFinished();
+//    QString tmp = process->readAll();
+//    qDebug()<<tmp;
+    double gcsRSSI = -40.0;
+
+    // send rssi command
+    double nodeRSSI = -30.0;
+    QVariantList test;
+    test.append(double(-(qrand() % 135 + 280))/10);
+    test.append(double(-(qrand() % 135 + 280))/10);
+    test.append(double(-(qrand() % 135 + 280))/10);
+//    qCDebug(VehicleLog) << test;//Save the log
+    setRssi(test);
+    emit rssiChanged(test);
+//    qDebug()<<temp << _id;
+//    char* comm = "iw dev ";
+//    int result = system(comm);
+//    qWarning()<<result;
 }
 
 void Vehicle::_updateHobbsMeter()

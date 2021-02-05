@@ -29,3 +29,4 @@ PlanMapItems                1.0 PlanMapItems.qml
 PolygonEditor               1.0 PolygonEditor.qml
 SplitIndicator              1.0 SplitIndicator.qml
 VehicleMapItem              1.0 VehicleMapItem.qml
+Trajectory                  1.0 Trajectory.qml

@@ -240,6 +240,16 @@ FlightMap {
         }
     }
 
+    //Add the Sensor Range to the map
+    Repeater {
+        model: QGroundControl.multiVehicleManager.vehicles
+        Trajectory {
+            map:                flightMap
+            vehicle:            _vehicle
+            property var _vehicle: object
+        }
+    }
+
     // Add the vehicles to the map
     MapItemView {
         model: QGroundControl.multiVehicleManager.vehicles
@@ -275,7 +285,6 @@ FlightMap {
             largeMapView:       mainIsMap
             masterController:   masterController
             vehicle:            _vehicle
-
             property var _vehicle: object
 
             PlanMasterController {

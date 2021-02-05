@@ -89,5 +89,18 @@ MapQuickItem {
                                                   ""
 
         }
+        QGCMapLabel {
+            id:     vehicleBioairState
+            map: _map
+            anchors.top:                vehicleLabel.bottom
+            anchors.horizontalCenter:   parent.horizontalCenter
+            font.pointSize: ScreenTools.defaultFontPointSize * 2
+            text: vehicle.bioairNodeState !== 8? qsTr("%1").arg(vehicle.getBioairNodeState()) : ""
+
+            Connections {
+                target: vehicle ? vehicle : null
+                onBioairNodeStateChanged: vehicleBioairState.text = vehicle.getBioairNodeState()
+            }
+        }
     }
 }
