@@ -126,6 +126,13 @@ Item {
         width:                  _rightPanelWidth
     }
 
+    SwarmSenseControl {
+        anchors.margins:        _toolsMargin
+        anchors.bottom:         parent.bottom
+        anchors.right:          parent.right
+        width:                  _rightPanelWidth
+    }
+
     TelemetryValuesBar {
         id:                 telemetryPanel
         x:                  recalcXPosition()
