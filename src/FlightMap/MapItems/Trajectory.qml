@@ -49,7 +49,7 @@ Item {
 
         MapPolyline {
             id: sensorTrajectory
-            line.width: 10
+            line.width: 1
             line.color: "#87ceeb"                           // Hack, can't get palette to work in here
             path:       _vehicle.trajectoryPoints.list()
             opacity:    0.2

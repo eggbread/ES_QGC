@@ -130,6 +130,18 @@ Rectangle {
         }
     }
 
+    Connections {
+        target: QGroundControl.multiVehicleManager
+        onActiveVehicleChanged: {
+            rgbBtn.checked = _activeVehicle.streamingOn === 0 || _activeVehicle.streamingOn === 1
+            depthBtn.checked = _activeVehicle.streamingOn === 0 || _activeVehicle.streamingOn === 2
+            bioairBtn.checked = _activeVehicle.bioairOn
+            aiBtn.checked = _activeVehicle.aiOn
+//            sensorRangeBtn.checked = _activeVehicle.showTrajectory
+        }
+    }
+
+
     Timer {
         id:             simplePhotoCaptureTimer
         interval:       500
@@ -337,7 +349,7 @@ Rectangle {
                                 height:             parent.height / 4
                                 QGCLabel {
                                     Layout.alignment:   Qt.AlignHCenter
-                                    text: qsTr("10 m")
+                                    text: _activeVehicle ? _activeVehicle.coordinate.distanceTo(object.coordinate).toFixed(1) + " m" : ""
                                 }
                             }
 
@@ -363,8 +375,13 @@ Rectangle {
                                 width:              parent.width / 3
                                 height:             parent.height / 4
                                 QGCLabel {
+                                    id:                 vehicleBioairState
                                     Layout.alignment:   Qt.AlignHCenter
-                                    text: qsTr("Origin")
+                                    text: object ? object.getBioairNodeState() : ""
+                                    Connections {
+                                        target: object ? object : null
+                                        onBioairNodeStateChanged: vehicleBioairState.text = object.getBioairNodeState()
+                                    }
                                 }
                             }
 

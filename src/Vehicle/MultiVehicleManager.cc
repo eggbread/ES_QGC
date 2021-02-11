@@ -255,6 +255,7 @@ void MultiVehicleManager::setActiveVehicle(Vehicle* vehicle)
 
     if (vehicle != _activeVehicle) {
         if (_activeVehicle) {
+            _activeVehicle->setActive(false);
             // The sequence of signals is very important in order to not leave Qml elements connected
             // to a non-existent vehicle.
 
@@ -290,6 +291,7 @@ void MultiVehicleManager::_setActiveVehiclePhase2(void)
 
     // And finally vehicle availability
     if (_activeVehicle) {
+        _activeVehicle->setActive(true);
         _activeVehicleAvailable = true;
         emit activeVehicleAvailableChanged(true);
 

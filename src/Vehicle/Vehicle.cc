@@ -113,6 +113,7 @@ Vehicle::Vehicle(LinkInterface*             link,
     : FactGroup                     (_vehicleUIUpdateRateMSecs, ":/json/Vehicle/VehicleFact.json")
     , _id                           (vehicleId)
     , _defaultComponentId           (defaultComponentId)
+    , _active(false)
     , _firmwareType                 (firmwareType)
     , _vehicleType                  (vehicleType)
     , _toolbox                      (qgcApp()->toolbox())
@@ -256,6 +257,7 @@ Vehicle::Vehicle(MAV_AUTOPILOT              firmwareType,
     , _id                               (0)
     , _defaultComponentId               (MAV_COMP_ID_ALL)
     , _offlineEditingVehicle            (true)
+    , _active(false)
     , _firmwareType                     (firmwareType)
     , _vehicleType                      (vehicleType)
     , _toolbox                          (qgcApp()->toolbox())
@@ -652,6 +654,9 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
         break;
     case MAVLINK_MSG_ID_COMMAND_ACK:
         _handleCommandAck(message);
+        break;
+    case MAVLINK_MSG_ID_COMMAND_LONG:
+        _handleCommandLong(message);
         break;
     case MAVLINK_MSG_ID_LOGGING_DATA:
         _handleMavlinkLoggingData(message);
@@ -1852,6 +1857,20 @@ void Vehicle::_startJoystick(bool start)
     }
 }
 
+bool Vehicle::active()
+{
+    return _active;
+}
+
+void Vehicle::setActive(bool active)
+{
+    if (_active != active) {
+        _active = active;
+        _startJoystick(false);
+        emit activeChanged(_active);
+    }
+}
+
 QGeoCoordinate Vehicle::homePosition()
 {
     return _homePosition;
@@ -2953,6 +2972,19 @@ void Vehicle::_sendMavCommandResponseTimeoutCheck(void)
         if (commandEntry.elapsedTimer.elapsed() > commandEntry.ackTimeoutMSecs) {
             // Try sending command again
             _sendMavCommandFromList(commandEntry);
+        }
+    }
+}
+
+void Vehicle::_handleCommandLong(mavlink_message_t& message)
+{
+    mavlink_command_long_t cmd;
+    mavlink_msg_command_long_decode(&message, &cmd);
+
+    switch (cmd.command) {
+    case MAV_CMD_BIOAIR_STATUS:
+        if (int(cmd.param1) != _bioairNodeState){
+            setBioairNodeState(cmd.param1);
         }
     }
 }
