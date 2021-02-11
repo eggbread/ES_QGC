@@ -270,7 +270,7 @@ Rectangle {
                     QGCSwitch {
                         id:                 bioairBtn
                         enabled:            _activeVehicle
-                        checked:            _activeVehicle.bioairOn
+                        checked:            _activeVehicle ? _activeVehicle.bioairOn : false
                         visible:            _activeVehicle
                         Layout.alignment:   Qt.AlignHCenter
                         onClicked: {
@@ -295,7 +295,7 @@ Rectangle {
                     ColumnLayout {
                         width:      ScreenTools.defaultFontPixelWidth * 25
                         height:     width / 2 - 30
-                        visible:    _activeVehicle.id !== object.id
+                        visible:    _activeVehicle ? _activeVehicle.id !== object.id : false
                         spacing:    1
 
                         QGCLabel {
@@ -410,7 +410,7 @@ Rectangle {
                     QGCSwitch {
                         id:                 rgbBtn
                         enabled:            _activeVehicle
-                        checked:            _activeVehicle.streaminOn === 0 || _activeVehicle.streaminOn === 1
+                        checked:            _activeVehicle ? _activeVehicle.streaminOn === 0 || _activeVehicle.streaminOn === 1 : false
                         visible:            _activeVehicle
                         Layout.alignment:   Qt.AlignHCenter
                         onClicked: {
@@ -455,7 +455,7 @@ Rectangle {
                     QGCSwitch {
                         id:                 depthBtn
                         enabled:            _activeVehicle
-                        checked:            _activeVehicle.streaminOn === 0 || _activeVehicle.streaminOn === 2
+                        checked:            _activeVehicle ? _activeVehicle.streaminOn === 0 || _activeVehicle.streaminOn === 2 : false
                         visible:            _activeVehicle
                         Layout.alignment:   Qt.AlignHCenter
                         onClicked: {
@@ -499,7 +499,7 @@ Rectangle {
                     QGCSwitch {
                         id:                 aiBtn
                         enabled:            _activeVehicle
-                        checked:            _activeVehicle.aiOn
+                        checked:            _activeVehicle ? _activeVehicle.aiOn : false
                         visible:            _activeVehicle
                         Layout.alignment:   Qt.AlignHCenter
                         onClicked: {
@@ -535,7 +535,7 @@ Rectangle {
                     QGCSwitch {
                         id:                 trackingBtn
                         enabled:            _activeVehicle
-                        checked:            _activeVehicle.aiOn
+                        checked:            _activeVehicle ? _activeVehicle.aiOn : false
                         visible:            _activeVehicle
                         Layout.alignment:   Qt.AlignHCenter
                         onClicked: {
@@ -565,16 +565,16 @@ Rectangle {
 
                 QGCSlider {
                     id:                     wizardPresetsAngleSlider
-                    visible:                sensorRangeBtn.checked
+                    visible:                true//sensorRangeBtn.checked
                     minimumValue:           10
                     maximumValue:           200
-                    value:                  __activeVehicle.sensorRange
+                    value:                  _activeVehicle ? _activeVehicle.sensorRange : false
                     stepSize:               10
                     tickmarksEnabled:       false
                     Layout.fillWidth:       true
                     Layout.columnSpan:      2
                     Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 1.5
-                    onValueChanged:         __activeVehicle.setSensorRange(value)
+                    onValueChanged:         _activeVehicle ? _activeVehicle.setSensorRange(value) : null
                     updateValueWhileDragging: true
                 }
             }

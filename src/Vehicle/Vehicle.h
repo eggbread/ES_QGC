@@ -238,6 +238,18 @@ public:
     Q_PROPERTY(QObject*             sysStatusSensorInfo         READ sysStatusSensorInfo                                            CONSTANT)
     Q_PROPERTY(bool                 allSensorsHealthy           READ allSensorsHealthy                                              NOTIFY allSensorsHealthyChanged)    //< true: all sensors in SYS_STATUS reported as healthy
 
+    // SwarmSense
+    Q_PROPERTY(int                  sensorRange             READ sensorRange            WRITE setSensorRange            NOTIFY sensorRangeChanged)
+    Q_PROPERTY(bool                 rtlOn                   READ rtlOn                  WRITE setRtlOn                  NOTIFY rtlOnChanged)
+    Q_PROPERTY(bool                 bioairOn                READ bioairOn               WRITE setBioairOn               NOTIFY bioairOnChanged)
+    Q_PROPERTY(int                  streamingOn             READ streamingOn            WRITE setStreamingOn            NOTIFY streamingOnChanged)
+    Q_PROPERTY(bool                 aiOn                    READ aiOn                   WRITE setAiOn                   NOTIFY aiOnChanged)
+    Q_PROPERTY(bool                 mainIsMap               READ mainIsMap              WRITE setMainIsMap              NOTIFY mainIsMapChanged)
+    Q_PROPERTY(uint                 messagesIn2sec          READ messagesIn2sec                                         NOTIFY messagesIn2secChanged)
+    Q_PROPERTY(bool                 showTrajectory          READ showTrajectory         WRITE setShowTrajectory         NOTIFY showTrajectoryChanged)
+    Q_PROPERTY(QVariantList         rssi                    READ rssi                   WRITE setRssi                   NOTIFY rssiChanged)
+    Q_PROPERTY(int                  bioairNodeState         READ bioairNodeState        WRITE setBioairNodeState        NOTIFY bioairNodeStateChanged)
+
     // The following properties relate to Orbit status
     Q_PROPERTY(bool             orbitActive     READ orbitActive        NOTIFY orbitActiveChanged)
     Q_PROPERTY(QGCMapCircle*    orbitMapCircle  READ orbitMapCircle     CONSTANT)
@@ -446,6 +458,30 @@ public:
     bool armed              () { return _armed; }
     void setArmed           (bool armed, bool showError);
     void setArmedShowError  (bool armed) { setArmed(armed, true); }
+
+    // SwarmSense
+    bool    rtlOn           () { return _rtlOn; }
+    bool    bioairOn        () { return _bioairOn; }
+    int     streamingOn     () { return _streamingOn; }
+    int     sensorRange     () { return _sensorRange; }
+    bool    aiOn            () { return _aiOn; }
+    bool    mainIsMap       () { return _mainIsMap; }
+    bool    showTrajectory  () { return _showTrajectory; }
+    QVariantList    rssi    () { return _rssi; }
+//    VideoReceiver*  videoReceiver           (void) { return _videoReceiver; }
+    uint            messagesIn2sec          () { return _messagesIn2sec; }
+    int         bioairNodeState(){ return _bioairNodeState;}
+
+    Q_INVOKABLE QString getBioairNodeState();
+    Q_INVOKABLE void setSensorRange(int sensorRange);
+    Q_INVOKABLE void setBioairOn   (bool bioairOn);
+    Q_INVOKABLE void setStreamingOn   (int streamingOn);
+    Q_INVOKABLE void setAiOn   (bool aiOn);
+    Q_INVOKABLE void setRtlOn (bool rtlOn);
+    Q_INVOKABLE void setMainIsMap (bool mainIsMap);
+    Q_INVOKABLE void setShowTrajectory(bool showTrajectory);
+    Q_INVOKABLE void setRssi    (QVariantList rssi);
+    Q_INVOKABLE void setBioairNodeState (int bioairNodeState);
 
     bool flightModeSetAvailable             ();
     QStringList flightModes                 ();
@@ -823,6 +859,19 @@ signals:
     void firmwareCustomVersionChanged   ();
     void gitHashChanged                 (QString hash);
     void vehicleUIDChanged              ();
+
+    // SwarmSense
+    void sensorRangeChanged            (int sensorRange);
+    void rtlOnChanged(bool rtlOn);
+    void bioairOnChanged(bool bioairOn);
+    void streamingOnChanged(int streamingOn);
+    void aiOnChanged(bool aiOn);
+    void mainIsMapChanged(bool mainIsMap);
+    void showTrajectoryChanged          (bool showTrajectory);
+    void messagesIn2secChanged      ();
+    void _handleMessageCountTimer();
+    void rssiChanged(QVariantList rssi);
+    void bioairNodeStateChanged(int bioairNodeState);
 
     /// New RC channel values coming from RC_CHANNELS message
     ///     @param channelCount Number of available channels, cMaxRcChannels max
@@ -1263,6 +1312,23 @@ private:
     // Settings keys
     static const char* _settingsGroup;
     static const char* _joystickEnabledSettingsKey;
+
+    // SwarmSense
+    int     _sensorRange = 150;
+    bool _rtlOn = false;
+    bool    _aiOn = false;
+    int    _streamingOn = -1;
+    bool    _bioairOn = false;
+    bool    _showTrajectory = false;
+    bool    _mainIsMap = true;
+    int _bioairNodeState = 8;
+    QVariantList _rssi;
+//    VideoReceiver*  _videoReceiver          = nullptr;
+    int     _port = 0;
+
+    QTimer              _messageCountTimer;
+    unsigned int        _messagesIn2sec;
+    unsigned int        _prevMessagesReceived;
 };
 
 Q_DECLARE_METATYPE(Vehicle::MavCmdResultFailureCode_t)
