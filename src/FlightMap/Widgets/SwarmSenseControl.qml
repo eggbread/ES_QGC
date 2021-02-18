@@ -27,7 +27,7 @@ Rectangle {
     height:     mainLayout.height + (_margins * 2)
     color:      "#80000000"
     radius:     _margins
-    visible:    !QGroundControl.settingsManager.flyViewSettings.alternateInstrumentPanel.rawValue && (_mavlinkCamera || _videoStreamAvailable || _simpleCameraAvailable) && multiVehiclePanelSelector.showSingleVehiclePanel
+    visible:    QGroundControl.multiVehicleManager.activeVehicle//!QGroundControl.settingsManager.flyViewSettings.alternateInstrumentPanel.rawValue && (_mavlinkCamera || _videoStreamAvailable || _simpleCameraAvailable) && multiVehiclePanelSelector.showSingleVehiclePanel
 
     property real   _margins:                                   ScreenTools.defaultFontPixelHeight / 2
     property var    _activeVehicle:                             QGroundControl.multiVehicleManager.activeVehicle
@@ -242,22 +242,22 @@ Rectangle {
         }
 
         // **Select button among two
-        RowLayout {
-            Layout.alignment:   Qt.AlignHCenter
-            spacing:            0
-            visible:            _showModeIndicator && !_mavlinkCamera && _simpleCameraAvailable && _videoStreamInPhotoMode
+//        RowLayout {
+//            Layout.alignment:   Qt.AlignHCenter
+//            spacing:            0
+//            visible:            _showModeIndicator && !_mavlinkCamera && _simpleCameraAvailable && _videoStreamInPhotoMode
 
-            QGCRadioButton {
-                id:             videoGrabRadio
-                font.pointSize: ScreenTools.smallFontPointSize
-                text:           qsTr("Video Grab")
-            }
-            QGCRadioButton {
-                font.pointSize: ScreenTools.smallFontPointSize
-                text:           qsTr("Camera Trigger")
-                checked:        true
-            }
-        }
+//            QGCRadioButton {
+//                id:             videoGrabRadio
+//                font.pointSize: ScreenTools.smallFontPointSize
+//                text:           qsTr("Video Grab")
+//            }
+//            QGCRadioButton {
+//                font.pointSize: ScreenTools.smallFontPointSize
+//                text:           qsTr("Camera Trigger")
+//                checked:        true
+//            }
+//        }
 
         ColumnLayout {
             visible:    _swarmSenseMode
@@ -266,7 +266,7 @@ Rectangle {
                 Layout.alignment:   Qt.AlignHCenter
                 Item {
                     width: ScreenTools.defaultFontPixelWidth * 10
-                    height: width / 2
+                    height: width / 2 - 25
                     QGCLabel {
                         Layout.alignment:   Qt.AlignHCenter
                         font.bold:          true
@@ -278,7 +278,7 @@ Rectangle {
 
                 Item {
                     width: ScreenTools.defaultFontPixelWidth * 10
-                    height: width / 2
+                    height: width / 2 - 25
                     QGCSwitch {
                         id:                 bioairBtn
                         enabled:            _activeVehicle
@@ -298,7 +298,7 @@ Rectangle {
 
             Column {
                 Layout.alignment:   Qt.AlignHCenter
-                spacing: 5
+                spacing: 3
 
                 Repeater {
                     model: QGroundControl.multiVehicleManager.vehicles
@@ -306,7 +306,7 @@ Rectangle {
 
                     ColumnLayout {
                         width:      ScreenTools.defaultFontPixelWidth * 25
-                        height:     width / 2 - 30
+                        height:     width / 2 - 35
                         visible:    _activeVehicle ? _activeVehicle.id !== object.id : false
                         spacing:    1
 
@@ -391,7 +391,7 @@ Rectangle {
                                 Layout.column:      3
                                 Layout.columnSpan:  1
                                 width:              parent.width / 2 + 50
-                                height:             parent.height + 10
+                                height:             parent.height
                                 source:             "/qmlimages/resources/signal_quality_excellent.png"
                             }
                         }
@@ -551,7 +551,7 @@ Rectangle {
 
                     QGCSwitch {
                         id:                 trackingBtn
-                        enabled:            _activeVehicle
+                        enabled:            false//_activeVehicle
                         checked:            _activeVehicle ? _activeVehicle.aiOn : false
                         visible:            _activeVehicle
                         Layout.alignment:   Qt.AlignHCenter
