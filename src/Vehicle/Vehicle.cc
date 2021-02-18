@@ -1964,14 +1964,14 @@ void Vehicle::setRssi(QVariantList rssi)
 void Vehicle::setStreamingOn(int streamingOn)
 {
     if(!_rtlOn){
+        QVariant port = _settingsManager->videoSettings()->udpPort()->rawValue();
         if(streamingOn == 0){ // both
-//            _videoReceiver->start();
 
             sendMavCommand(_defaultComponentId,
                            MAV_CMD_SET_STREAMING,
                            true,
                            1.0f,
-                           _port, // PORT
+                           port.toFloat(), // PORT
                            0.0f, // MODE - -1 : Nothing, 0 : both, 1 : rgb only, 2: depth only
                            0.0f); // IS_USING_PELEENET
         }else if(streamingOn == 1){ // rgb
@@ -1981,7 +1981,7 @@ void Vehicle::setStreamingOn(int streamingOn)
                            MAV_CMD_SET_STREAMING,
                            true,
                            1.0f,
-                           _port, // PORT
+                           port.toFloat(), // PORT
                            1.0f, // MODE
                            0.0f); // IS_USING_PELEENET
         }else if(streamingOn == 2){ // depth
@@ -1991,7 +1991,7 @@ void Vehicle::setStreamingOn(int streamingOn)
                            MAV_CMD_SET_STREAMING,
                            true,
                            1.0f,
-                           _port, // PORT
+                           port.toFloat(), // PORT
                            2.0f, // MODE
                            0.0f); // IS_USING_PELEENET
         } else if(streamingOn == -1){ // nothing
