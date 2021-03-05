@@ -97,6 +97,7 @@ MapQuickItem {
             anchors.horizontalCenter:   parent.horizontalCenter
             font.pointSize: ScreenTools.defaultFontPointSize * 2
             text: vehicle.bioairNodeState !== 8? qsTr("%1").arg(vehicle.getBioairNodeState()) : ""
+            visible:    vehicle.bioairOn
 
             Connections {
                 target: vehicle ? vehicle : null

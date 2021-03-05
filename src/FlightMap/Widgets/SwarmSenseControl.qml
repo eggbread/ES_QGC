@@ -179,6 +179,10 @@ Rectangle {
                                 _activeVehicle.setBioairOn(false)
                             }
                         }
+                        Connections {
+                            target: _activeVehicle ? _activeVehicle : null
+                            onBioairOnChanged: bioairBtn.checked = bioairOn
+                        }
                     }
                 }
             }

@@ -246,6 +246,8 @@ Vehicle::Vehicle(LinkInterface*             link,
     // Start csv logger
     connect(&_csvLogTimer, &QTimer::timeout, this, &Vehicle::_writeCsvLine);
     _csvLogTimer.start(1000);
+
+    _checkBioAirStatus();
 }
 
 // Disconnected Vehicle for offline editing
@@ -2976,15 +2978,25 @@ void Vehicle::_sendMavCommandResponseTimeoutCheck(void)
     }
 }
 
+void Vehicle::_checkBioAirStatus()
+{
+    sendMavCommand(_defaultComponentId,
+                MAV_CMD_BIOAIR_STATUS,
+                true);
+}
+
 void Vehicle::_handleCommandLong(mavlink_message_t& message)
 {
     mavlink_command_long_t cmd;
     mavlink_msg_command_long_decode(&message, &cmd);
-
     switch (cmd.command) {
     case MAV_CMD_BIOAIR_STATUS:
-        if (int(cmd.param1) != _bioairNodeState){
-            setBioairNodeState(cmd.param1);
+        if (_bioairOn != bool(cmd.param1)){
+            _bioairOn = bool(cmd.param1);
+            emit bioairOnChanged(_bioairOn);
+        }
+        if (_bioairOn && int(cmd.param2) != _bioairNodeState){
+            setBioairNodeState(cmd.param2);
         }
     }
 }
