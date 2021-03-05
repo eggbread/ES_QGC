@@ -3065,7 +3065,9 @@ void Vehicle::_handleCommandAck(mavlink_message_t& message)
                             qgcApp()->showAppMessage(tr("%1 command denied").arg(rawCommandName));
                             break;
                         case MAV_RESULT_UNSUPPORTED:
-                            qgcApp()->showAppMessage(tr("%1 command not supported").arg(rawCommandName));
+                            if (ack.command != MAV_CMD_BIOAIR_STATUS){
+                                qgcApp()->showAppMessage(tr("%1 command not supported").arg(rawCommandName));
+                            }
                             break;
                         case MAV_RESULT_FAILED:
                             qgcApp()->showAppMessage(tr("%1 command failed").arg(rawCommandName));
